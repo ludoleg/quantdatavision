@@ -1,4 +1,3 @@
-import datetime
 import webapp2
 from google.appengine.ext.webapp import template
 
@@ -94,9 +93,13 @@ class ViewDataHandler(webapp2.RequestHandler):
 
         # Instantiate a BlobReader for a given Blobstore value.
         blob_reader = blobstore.BlobReader(my_key)
-        for line in blob_reader:
-            self.response.out.write(line.replace("\r\n", "<br/>"))
-            self.response.out.write(line)
+        angle, diff = np.loadtxt(blob_reader, unpack=True)
+        
+        # for line in blob_reader:
+        #     self.response.out.write(line.replace("\r\n", "<br/>"))
+        #     self.response.out.write(line)
+        self.response.out.write(angle)
+        self.response.out.write(diff)
 
         self.response.out.write("</body></html>")
 
