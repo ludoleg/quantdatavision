@@ -26,11 +26,19 @@ class UserData(ndb.Model):
 
 class ShowHome(webapp2.RequestHandler):
     def get(self):
-        ## Code to render home page
-        temp_data = {}
-        temp_path = 'index.html'
-        self.response.out.write(template.render(temp_path,temp_data))
+        # Checks for active Google account session
+        user = users.get_current_user()
+        if user:
+            ## Code to render home page
+            temp_data = {}
+            temp_path = 'index.html'
+            self.response.out.write(template.render(temp_path,temp_data))
+            #self.response.headers['Content-Type'] = 'text/html; charset=utf-8'
+            #self.response.write('Hello, ' + user.nickname())
+        else:
+            self.redirect(users.create_login_url(self.request.uri))
 
+        
 class DisplayChart(webapp2.RequestHandler):
     def get(self):
         template_data = {}
@@ -61,7 +69,7 @@ class XRDUploadHandler(blobstore_handlers.BlobstoreUploadHandler):
             user_data = UserData(
                 user=users.get_current_user().user_id(),
                 blob_key=upload.key())
-            logging.debug('User: %s', user_data.user)
+            logging.info('User: %s', user_data.user)
             logging.debug('Blobkey: %s', user_data.blob_key)
             user_data.put()
 
@@ -104,9 +112,11 @@ class ServeDataHandler(blobstore_handlers.BlobstoreDownloadHandler):
         if not blobstore.get(data_key):
             self.error(404)
         else:
+            user = users.get_current_user()
+            greeting = ('Welcome, %s! (<a href="%s">sign out</a>)' %(user.nickname(), users.create_logout_url('/')))
             self.response.write("""<html><head><title>Cristallography</title></head><body>""")
-            self.response.write("Cristal... graph")
             self.response.write(dynamic_png(data_key))
+            self.response.write("%s" % greeting)
             self.response.write("""</body> </html>""")
 # [END download_handler]
 
