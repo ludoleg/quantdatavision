@@ -8,12 +8,16 @@ from google.appengine.ext.webapp import blobstore_handlers
 from google.appengine.api import users
 
 import StringIO
-import numpy as np
-#import matplotlib.pyplot as plt
-
 import logging
+import chart
 
-global user_data
+import numpy as np
+
+def dynamic_png(key):
+    blob_reader = blobstore.BlobReader(key)
+    rv = StringIO.StringIO()
+    rv = chart.GenerateChart(blob_reader)
+    return """<img src="data:image/png;base64,%s"/>""" % rv.getvalue().encode("base64").strip()
 
 # This datastore model keeps track of which users uploaded which photos.
 class UserData(ndb.Model):
@@ -27,23 +31,10 @@ class ShowHome(webapp2.RequestHandler):
         temp_path = 'index.html'
         self.response.out.write(template.render(temp_path,temp_data))
 
-
-class ShowChart(webapp2.RequestHandler):
-     def get(self):
-#         plt.plot(np.random.random((20)))
-#         sio = StringIO.StringIO()
-#         plt.savefig(sio, format="png")
-#         img_b64 = sio.getvalue().encode("base64").strip()
-#         plt.clf()
-#         sio.close()
-         self.response.write("""<html><body>""")
-#         self.response.write("<img src='data:image/png;base64,%s'/>" % img_b64)
-         self.response.write("""</body> </html>""")
-
 class DisplayChart(webapp2.RequestHandler):
     def get(self):
         template_data = {}
-        template_path = 'chart.html'
+        template_path = 'displayChart.html'
         self.response.out.write(template.render(template_path,template_data))
          
 class XRDFileUploadFormHandler(webapp2.RequestHandler):
@@ -75,7 +66,7 @@ class XRDUploadHandler(blobstore_handlers.BlobstoreUploadHandler):
             user_data.put()
 
             self.redirect('/serve_data/%s' % upload.key())
-            
+
         except:
             self.error(500)
 
@@ -98,7 +89,9 @@ class ViewDataHandler(webapp2.RequestHandler):
         # for line in blob_reader:
         #     self.response.out.write(line.replace("\r\n", "<br/>"))
         #     self.response.out.write(line)
+        self.response.out.write("Angle<br/>")
         self.response.out.write(angle)
+        self.response.out.write("Diff<br/>")
         self.response.out.write(diff)
 
         self.response.out.write("</body></html>")
@@ -107,10 +100,14 @@ class ViewDataHandler(webapp2.RequestHandler):
 # [START download_handler]
 class ServeDataHandler(blobstore_handlers.BlobstoreDownloadHandler):
     def get(self, data_key):
+        logging.debug('Download handler Key: %s', data_key)
         if not blobstore.get(data_key):
             self.error(404)
         else:
-            self.send_blob(data_key)
+            self.response.write("""<html><head><title>Cristallography</title></head><body>""")
+            self.response.write("Cristal... graph")
+            self.response.write(dynamic_png(data_key))
+            self.response.write("""</body> </html>""")
 # [END download_handler]
 
 ## Here is the WSGI application instance that routes requests
@@ -120,7 +117,6 @@ app = webapp2.WSGIApplication([
     ('/serve_data/([^/]+)?', ServeDataHandler),
     ('/upload_data',XRDUploadHandler),
     ('/upload_form',XRDFileUploadFormHandler),
-#    ('/chart',ShowChart),
     ('/chart',DisplayChart),
     ('/', ShowHome),
 ], debug=True)
