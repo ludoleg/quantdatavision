@@ -9,14 +9,14 @@ from google.appengine.api import users
 
 import StringIO
 import logging
-import wipchart
+import chart
 
 import numpy as np
 
 def dynamic_png(key):
     blob_reader = blobstore.BlobReader(key)
     rv = StringIO.StringIO()
-    rv = wipchart.GenerateChart(blob_reader)
+    rv = chart.GenerateChart(blob_reader)
     return """<img src="data:image/png;base64,%s"/>""" % rv.getvalue().encode("base64").strip()
 
 # This datastore model keeps track of which users uploaded which photos.
