@@ -114,10 +114,39 @@ class ServeDataHandler(blobstore_handlers.BlobstoreDownloadHandler):
         else:
             user = users.get_current_user()
             greeting = ('Welcome, %s! (<a href="%s">sign out</a>)' %(user.nickname(), users.create_logout_url('/')))
-            self.response.write("""<html><head><title>Cristallography</title></head><body>""")
+            self.response.write("""<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <link rel="icon" href="http://getbootstrap.com/favicon.ico">
+    <title></title>
+    <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="http://getbootstrap.com/examples/justified-nav/justified-nav.css" rel="stylesheet">
+    <script type="text/javascript" src="js/d3.js"></script>
+</head>
+<body>
+    <div class="container">
+ 
+        <div class="masthead">
+            <h3 class="text-muted">Mining Data Visualization</h3>
+            <ul class="nav nav-justified">
+                <li class="active"><a href="#">Home</a>
+                </li>
+ 
+                <li><a href="/view_data">Data Source</a>
+                </li>
+                <li><a href="/chart">Chart</a>
+                </li>
+            </ul>
+        </div>
+    <div class="container">
+        <!-- Jumbotron -->
+        <div class="jumbotron">""")
+#            self.response.write("""<html><head><title>Cristallography</title></head><body>""")
             self.response.write(dynamic_png(data_key))
             self.response.write("%s" % greeting)
-            self.response.write("""</body> </html>""")
+            self.response.write("""</div></div></body> </html>""")
 # [END download_handler]
 
 ## Here is the WSGI application instance that routes requests
