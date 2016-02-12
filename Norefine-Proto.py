@@ -8,7 +8,7 @@ Created on Wed Aug 20 16:03:16 2014
 #from scipy.optimize import leastsq
 import numpy as np
 import matplotlib.pyplot as plt
-from math import *
+from math import sqrt, pi, e, log
 
 """
 
@@ -54,7 +54,7 @@ def residual(I, X, Yexp, param):
     if param[2] > 0:  #this line adds a refined constant background
         Yg = Yg + I[len(I)-1]
 
-    print "integral error = %.2f" % (sum(abs(Yexp-Yg))/len(Yexp))
+    #print "integral error = %.2f" % (sum(abs(Yexp-Yg))/len(Yexp))
 
     return (Yexp-Yg)
     
@@ -157,7 +157,7 @@ def BGfit(angle, diff, BGsmoothing, w, w2, Polyorder):
             BGY.append(diffBG[i])
     #########   Polynomial fit   ########################################
     if len(BGY)<10:
-        print "too few background points selected"
+        #print "too few background points selected"
         BGpoly = diff-diff
     else:
         polycoefs = []
@@ -206,7 +206,7 @@ def makeDB(difdata, mineral, enable, Target):
         Lambda = 1.541838
     elif Target == 'Co':
         Lambda = 1.78897
-    else : print 'ERROR: Tube target material unknown'
+    #else : print 'ERROR: Tube target material unknown'
 
     for i in range(0, len(mineral)):
         iv2=0
@@ -233,10 +233,10 @@ def makeDB(difdata, mineral, enable, Target):
                     linedata = difdata[j]   #       linedata = linedata[16:len(linedata)]
                     datavalues = [float(n) for n in linedata.split()]
                     if len(datavalues)==7:
-                        print datavalues
+                        #print datavalues
                         #datavalues contains data in difdata card: 2T I d H K L Multiplicity
                         ##  recalculate 2t positions depending on Lambda  
-                        datavalues[0] = 2*180/pi*asin(Lambda/2/datavalues[2])
+                        datavalues[0] = 2*180/pi*math.asin(Lambda/2/datavalues[2])
                         if datavalues[0] >= 5 and datavalues[0] <= 55 :
                             DB[i][peaknum] = datavalues
                             peaknum += 1
@@ -270,7 +270,8 @@ def Setparameters():
 
 
 
-def overplotgraph(angle,diff,BGpoly,Sum, mineral, enable, Q):
+def overplotgraph(angle,diff,BGpoly,Sum, graphlist):
+     
     plt.close("all")
     fig2 = plt.figure(figsize=(15,5)) 
     plt.plot(angle, diff, linestyle="none",  marker=".",  color="black")
@@ -293,13 +294,14 @@ def overplotgraph(angle,diff,BGpoly,Sum, mineral, enable, Q):
     FOM = sum(abs(diff-Sum))/len(diff)
     plt.text(6, offset/10*12, "FOM = %.2f" %(FOM), fontsize=12, color="red")
     vertpos = offset/10*9
-    for i in range(0,len(mineral)):
-        if enable[i] == 1:
-            plt.text(6, vertpos,"%s :" %mineral[i], fontsize=12, color="blue")
-            plt.text(18, vertpos,"%.1f" %Q[i], fontsize=12, color="blue")
-            vertpos -= offset/15
+    for i in range(0,len(graphlist)):
+        plt.text(6, vertpos,"%s :" %graphlist[i][0], fontsize=12, color="blue")
+        plt.text(18, vertpos,"%.1f" %float(graphlist[i][1]), fontsize=12, color="blue")
+        vertpos -= offset/15
     plt.show()
 
+def getKey(item):
+    return item[1]
 
 def runprog(filepath1,namesample,filepath2,DBname,phaselist):
     
@@ -359,21 +361,24 @@ def runprog(filepath1,namesample,filepath2,DBname,phaselist):
             diffsmooth[i] = np.mean(diff[minsmooth:maxsmooth])  #computes smoothed value for i
     
     for i in range(0, len(mineral)):
-        if RIR[i] > 0:
-             Iinit[i] = scalegaussmin(angle, (diff-BGpoly), DB2T[i], DBInt[i], RIR[i], a, b, OStarget)
+        if RIR[i] > 0 and enable[i] >0:
+            #print "RIR(" + mineral[i] + ')= %.1f' %RIR[i]
+            Iinit[i] = scalegaussmin(angle, (diff-BGpoly), DB2T[i], DBInt[i], RIR[i], a, b, OStarget)
+            #print Iinit[i]
         else :
             Iinit[i] = 0
     
     Qinit = []
     Qinit = Iinit*enable/sum(Iinit)*100
-    print "Initialization:"
-    for i in range(0, len(mineral)):
+    #print "Initialization:"
+    for i in range(0, len(mineral)):        
         if enable[i]<>0:
+            #print "Qinit(" + mineral[i] + ')= %.1f' %Qinit[i]
             if Qinit[i] < Thresh[i]:
                 enable[i] = 0
-                print mineral[i], "- init : %.1f >>> eliminated\t" %Qinit[i]
-            else:
-                print mineral[i], "- init : %.1f" %Qinit[i]      
+                #print mineral[i], "- init : %.1f >>> eliminated\t" %Qinit[i]
+            #else:
+                #print mineral[i], "- init : %.1f" %Qinit[i]      
     
     mineralstart = mineral
     mineral=[]
@@ -392,7 +397,7 @@ def runprog(filepath1,namesample,filepath2,DBname,phaselist):
             RIR.append(RIRstart[i])
             Thresh.append(Threshstart[i])
             I.append(Iinit[i])
-    print ""
+
     
     #######################   Define refinement Threshold list      ############
     Thresh = np.zeros_like(RIR)
@@ -419,6 +424,31 @@ def runprog(filepath1,namesample,filepath2,DBname,phaselist):
     #   .....etc
     #################################   LSTSQ REFINEMENT   #######################
     
+
+    '''
+    Keep_refining loop removed temporarily to alleviate Scipy requirement
+    '''
+    mineral_buf = mineral
+    enable_buf = enable
+    RIR_buf = RIR
+    Thresh_buf = Thresh
+    I_buf = I
+    mineral = []
+    enable = []
+    RIR = []
+    Thresh = []
+    I = []
+    for i in range(0, len(mineral_buf)):
+        if enable_buf[i] == 1:
+            mineral.append(mineral_buf[i])
+            enable.append(enable_buf[i])
+            RIR.append(RIR_buf[i])
+            Thresh.append(Thresh_buf[i])
+            I.append(I_buf[i])
+    #redo DB with shorter list
+    DB, RIRcalc, peakcount = makeDB(difdata, mineral, enable, Target)
+    DB2T = DB[:,:,0]
+    DBInt = DB[:,:,1]
     ## calculate parameter list for functions
     param = [0]*(1000*2*(len(mineral)+1))
     param[0]= a
@@ -427,84 +457,26 @@ def runprog(filepath1,namesample,filepath2,DBname,phaselist):
         param[i+10] = RIR[i]*enable[i]
         for j in range(0, DB2T.shape[1]/2):
             param[(1+i)*1000 + 2*j] = DB2T[i,j]
-            param[(1+i)*1000 + 2*j+1] = DBInt[i,j]
+            param[(1+i)*1000 + 2*j+1] = DBInt[i,j] 
+
+
+    Q = I/sum(I)*100   
+    Sum = gausspat2(I, angle, param)
+    Sum *= max(diff-BGpoly)/max(Sum)
+    Sum += BGpoly
     
-    
-    
-    '''
-    Keep_refining = True
-    refinement_counter = 0
-    
-    
-    while Keep_refining:
-        ## recalculate DB with current list
-        refinement_counter +=1
-        print ""    
-        print "start LSTSQ #", refinement_counter
-        DB, RIRcalc, peakcount = makeDB(difdata, mineral, Target)
-        DB2T = DB[:,:,0]
-        DBInt = DB[:,:,1]
-        print 'peakcount = ', peakcount
-        ## calculate parameter list for functions
-        param = [0]*(1000*2*(len(mineral)+1))
-        param[0]= a
-        param[1] = b
-        for i in range(0, len(mineral)):
-            param[i+10] = RIR[i]*enable[i]
-            for j in range(0, DB2T.shape[1]/2):
-                param[(1+i)*1000 + 2*j] = DB2T[i,j]
-                param[(1+i)*1000 + 2*j+1] = DBInt[i,j]
-    
-        Keep_refining = False
-        Istart=I
-        if addBG<>0:
-            Istart.append(addBG)
-            param[2]=1
-        if refinement_counter == 1:
-            precision = 0.1
-        elif refinement_counter == 2:
-            precision = 0.01
-        else:
-            precision = 0.001
-        I, tossme = leastsq(residual, Istart, args=(angle, diff-BGpoly, param),  gtol=precision)#, col_deriv=1, maxfev=100)
-        print "end LSTSQ"
-        Q = I/sum(I)*100
-        for i in range(0, len(mineral)):
-            if (Q[i] >= Thresh[i]):
-                print mineral[i], " : %.1f" %Q[i]
-            else:
-                enable[i]=0
-                Keep_refining = True
-                print mineral[i], " : %.1f  >>>> eliminated" %Q[i]
-        if refinement_counter < 3:
-             Keep_refining = True
-             
-        mineral_buf = mineral
-        enable_buf = enable
-        RIR_buf = RIR
-        Thresh_buf = Thresh
-        I_buf = I
-        mineral = []
-        enable = []
-        RIR = []
-        Thresh = []
-        I = []
-        for i in range(0, len(mineral_buf)):
-            if enable_buf[i] == 1:
-                mineral.append(mineral_buf[i])
-                enable.append(enable_buf[i])
-                RIR.append(RIR_buf[i])
-                Thresh.append(Thresh_buf[i])
-                I.append(I_buf[i])
-        Q = I/sum(I)*100
+    graphlist = []
+    # makes sorted list of mineral, Q
+    for i in range(0,len(mineral)):
+        graphlist.append([mineral[i],Q[i]])
+
+    graphlist.sort(key=getKey, reverse=True)    
+
+    for i in range(0,len(graphlist)):
+        print "%s : %.2f " %(graphlist[i][0], graphlist[i][1])
     
 
-    '''
-    Q = I/sum(I)*100    
-    Sum = gausspat2(I, angle, param) + BGpoly
-    
-
-    #overplotgraph(angle,diff,BGpoly,Sum, mineral, enable, Q)
+    overplotgraph(angle,diff,BGpoly,Sum, graphlist[0:min(len(graphlist), 10)])
 
     return
 
@@ -514,14 +486,13 @@ def runprog(filepath1,namesample,filepath2,DBname,phaselist):
 #############   Program parameters   ##########################################
 ##############################################################################
 
-#filepath1='/home/philippe/Documents/Projects/AutoQuant/XRD_data/'
-filepath1='/Users/ludo/Documents/workspace/decoupling/XRD_data/'
+filepath1='/home/philippe/Documents/Projects/AutoQuant/XRD_data/'
 namesample = "Mix3A-film.txt"
-#filepath2='/home/philippe/Documents/Projects/AutoQuant/'
-filepath2='/Users/ludo/Documents/workspace/decoupling/'
+filepath2='/home/philippe/Documents/Projects/AutoQuant/'
 DBname="Final_AutMin-Database-difdata.txt"
 phaselistname = 'AutMin-phaselist-final.csv'
 
 
 
 runprog(filepath1,namesample,filepath2,DBname,phaselistname)
+
