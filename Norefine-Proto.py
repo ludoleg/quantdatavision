@@ -8,7 +8,7 @@ Created on Wed Aug 20 16:03:16 2014
 #from scipy.optimize import leastsq
 import numpy as np
 import matplotlib.pyplot as plt
-from math import sqrt, pi, e, log
+from math import *
 
 """
 
@@ -236,7 +236,7 @@ def makeDB(difdata, mineral, enable, Target):
                         #print datavalues
                         #datavalues contains data in difdata card: 2T I d H K L Multiplicity
                         ##  recalculate 2t positions depending on Lambda  
-                        datavalues[0] = 2*180/pi*math.asin(Lambda/2/datavalues[2])
+                        datavalues[0] = 2*180/pi*asin(Lambda/2/datavalues[2])
                         if datavalues[0] >= 5 and datavalues[0] <= 55 :
                             DB[i][peaknum] = datavalues
                             peaknum += 1
@@ -265,15 +265,14 @@ def Setparameters():
     # Initialization
     INIsmoothing = False
     OStarget = 0.01
-    Target = "Co"
+    Target = "Co"  # choose Cu or Co
+
     return(BGsmoothing,w,w2,Polyorder,addBG,INIsmoothing,OStarget,a,b,Target)
 
 
 
 def overplotgraph(angle,diff,BGpoly,Sum, graphlist):
-     
     plt.close("all")
-    fig2 = plt.figure(figsize=(15,5)) 
     plt.plot(angle, diff, linestyle="none",  marker=".",  color="black")
     plt.xlabel('2-theta (deg)')
     plt.ylabel('intensity')
@@ -486,11 +485,14 @@ def runprog(filepath1,namesample,filepath2,DBname,phaselist):
 #############   Program parameters   ##########################################
 ##############################################################################
 
-filepath1='/home/philippe/Documents/Projects/AutoQuant/XRD_data/'
+#filepath1='/home/philippe/Documents/Projects/AutoQuant/XRD_data/'
+filepath1='/Users/ludo/Documents/workspace/decoupling/XRD_data/'
 namesample = "Mix3A-film.txt"
-filepath2='/home/philippe/Documents/Projects/AutoQuant/'
+#filepath2='/home/philippe/Documents/Projects/AutoQuant/'
+filepath2='/Users/ludo/Documents/workspace/decoupling/'
 DBname="Final_AutMin-Database-difdata.txt"
 phaselistname = 'AutMin-phaselist-final.csv'
+
 
 
 
