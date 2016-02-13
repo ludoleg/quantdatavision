@@ -4,10 +4,12 @@ Created on Fri Feb 12 11:36:53 2016
 
 @author: philippe
 """
+import logging
 import numpy as np
 import matplotlib.pyplot as plt
 from math import *
 
+import StringIO
 # import io
 # from PIL import Image
 
@@ -28,7 +30,9 @@ def PhaseAnalyze(XRDdata,difdata,phaselist):
     angle, diff = np.loadtxt(XRDdata, unpack=True)
     BGpoly = BGfit(angle, diff, BGsmoothing, w, w2, Polyorder)
 
-
+    logging.debug('Starting PhaseAnalysis')
+    # logging.debug(phaselist)
+    
     ##########  Open minerals list   #############################################
     ######### extracts 3 lists: mineral, RIR, enable #############################
 
@@ -37,6 +41,8 @@ def PhaseAnalyze(XRDdata,difdata,phaselist):
     enable=[]
     for i in range(1, len(phaselist)):
         line = phaselist[i]
+        # logging.warning('%s before you %s', 'Look', 'leap!')
+        # logging.debug(line)
         line = line[0:len(line)-1]
         phaselist[i] = line.split('\t')
         mineral.append(phaselist[i][0])
@@ -52,11 +58,10 @@ def PhaseAnalyze(XRDdata,difdata,phaselist):
     
     Sum, results = Quantifyinit(angle,diff,BGpoly,DB2T, DBInt, mineral, RIR, enable, difdata, INIsmoothing,OStarget,a,b,Target)
     
-
     plot = overplotgraph(angle,diff,BGpoly,Sum, results[0:min(len(results), 10)])
-    
-    
-    return results, plot
+        
+    # return results, plot
+    return plot
 
 ##############################################################################
 #########################  FUNCTION DEFINITIONS #############################
@@ -436,8 +441,8 @@ def Quantifyinit(angle,diff,BGpoly,DB2T, DBInt, mineral, RIR, enable, difdata, I
     Qresults.sort(key=getKey, reverse=True)    
 
     for i in range(0,len(Qresults)):
-        print "%s : %.2f " %(Qresults[i][0], Qresults[i][1])
-
+        # print "%s : %.2f " %(Qresults[i][0], Qresults[i][1])
+        logging.info("%s : %.2f " %(Qresults[i][0], Qresults[i][1]))
 
     return (Sum, Qresults)
 

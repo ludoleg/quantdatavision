@@ -17,6 +17,7 @@ def dynamic_png(key):
     blob_reader = blobstore.BlobReader(key)
     rv = StringIO.StringIO()
     rv = chart.GenerateChart(blob_reader)
+    # logging.debug(results)
     return """<img src="data:image/png;base64,%s"/>""" % rv.getvalue().encode("base64").strip()
 
 # This datastore model keeps track of which users uploaded which photos.
@@ -27,6 +28,7 @@ class UserData(ndb.Model):
 class ShowHome(webapp2.RequestHandler):
     def get(self):
         # Checks for active Google account session
+        logging.debug('Starting ShowHome')
         user = users.get_current_user()
         if user:
             ## Code to render home page
@@ -121,7 +123,8 @@ class ServeDataHandler(blobstore_handlers.BlobstoreDownloadHandler):
 # [END download_handler]
 
 ## Here is the WSGI application instance that routes requests
- 
+logging.getLogger().setLevel(logging.DEBUG)
+
 app = webapp2.WSGIApplication([
     ('/view_data',ViewDataHandler),
     ('/serve_data/([^/]+)?', ServeDataHandler),
