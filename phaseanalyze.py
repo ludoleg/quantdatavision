@@ -60,8 +60,9 @@ def PhaseAnalyze(XRDdata,difdata,phaselist):
     
     plot = overplotgraph(angle,diff,BGpoly,Sum, results[0:min(len(results), 10)])
         
-    # return results, plot
-    return plot
+    return results, plot
+    # return plot
+    # return results
 
 ##############################################################################
 #########################  FUNCTION DEFINITIONS #############################
@@ -480,10 +481,9 @@ def overplotgraph(angle,diff,BGpoly,Sum, graphlist):
     # buf.seek(0)
     # plot = Image.open(buf)
     # buf.close()
-    # success = True
     # return plot
 
-    plt.show()
+    plt.show
     
     ludo_rv = StringIO.StringIO()
     plt.savefig(ludo_rv, format="png")
