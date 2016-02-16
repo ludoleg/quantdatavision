@@ -1,3 +1,5 @@
+import globals
+
 import logging
 import phaseanalyze as QUANT
 from google.appengine.ext import ndb
@@ -30,14 +32,22 @@ def GenerateChart(obj_key):
     # logging.debug(phaselist)
         
     # rv_plot = QUANT.PhaseAnalyze(XRDdata,difdata,phaselist)
-    results, rv_plot = QUANT.PhaseAnalyze(XRDdata,difdata,phaselist)
+    if globals.OSX:
+        results = QUANT.PhaseAnalyze(XRDdata,difdata,phaselist)
+    else:
+        results, rv_plot = QUANT.PhaseAnalyze(XRDdata,difdata,phaselist)
+        
     ludo.phaselist = results
     ludo.put()
     
     logging.debug(ludo)
     logging.info("Done with processing")
     
-    return rv_plot
+    if globals.OSX:
+        return results
+    else:
+        return rv_plot
+    
     # return results, rv_plot
     # return results
 

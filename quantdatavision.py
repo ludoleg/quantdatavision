@@ -1,5 +1,6 @@
+import globals
 import webapp2
-from google.appengine.ext.webapp import template
+#from google.appengine.ext.webapp import template
 
 from google.appengine.ext import blobstore
 from google.appengine.ext.webapp import blobstore_handlers
@@ -12,29 +13,41 @@ import logging
 import chart
 from chart import UserData
 
+import os
+import jinja2
+
+JINJA_ENVIRONMENT = jinja2.Environment(
+    loader=jinja2.FileSystemLoader(os.path.dirname(__file__)+ "/templates"),
+    extensions=['jinja2.ext.autoescape'],
+    autoescape=True)
+
 import csv
 # import json
-
-import numpy as np
 
 def dynamic_png(key):
 
     rv = StringIO.StringIO()
     rv = chart.GenerateChart(key)
     logging.debug(rv)
-    return """<img src="data:image/png;base64,%s"/>""" % rv.getvalue().encode("base64").strip()
-    # return rv
+    if globals.OSX:
+        return rv
+    else:
+        return """<img src="data:image/png;base64,%s"/>""" % rv.getvalue().encode("base64").strip()
 
 class ShowHome(webapp2.RequestHandler):
     def get(self):
         # Checks for active Google account session
+        title = "Welcome to PLQuant"
+        template = JINJA_ENVIRONMENT.get_template('index.html')
+        template_vars = {
+            'title': title,
+            'user': "Ludo"
+        }
         logging.debug('Starting ShowHome')
         user = users.get_current_user()
         if user:
             ## Code to render home page
-            temp_data = {}
-            temp_path = 'index.html'
-            self.response.out.write(template.render(temp_path,temp_data))
+            self.response.out.write(template.render(template_vars))
             #self.response.headers['Content-Type'] = 'text/html; charset=utf-8'
             #self.response.write('Hello, ' + user.nickname())
         else:
@@ -43,9 +56,8 @@ class ShowHome(webapp2.RequestHandler):
         
 class DisplayChart(webapp2.RequestHandler):
     def get(self):
-        template_data = {}
-        template_path = 'displayChart.html'
-        self.response.out.write(template.render(template_path,template_data))
+        template = JINJA_ENVIRONMENT.get_template('displayChart.html')
+        self.response.out.write(template.render())
          
 class XRDFileUploadFormHandler(webapp2.RequestHandler):
     def get(self):
@@ -119,31 +131,17 @@ class ViewDataHandler(webapp2.RequestHandler):
     def get(self):
         user=users.get_current_user().user_id()
         logging.debug('User: %s', user)
-        qry = UserData.query(UserData.user == user).get()
-        my_key = qry.blob_key
-        logging.debug('Key: %s', my_key)
-
-        self.response.out.write("<html><body>")
-        self.response.out.write("<p>Welcome to Data Quant!</p>")
-
-        # Instantiate a BlobReader for a given Blobstore value.
-        blob_reader = blobstore.BlobReader(my_key)
-        angle, diff = np.loadtxt(blob_reader, unpack=True)
-        
-        # for line in blob_reader:
-        #     self.response.out.write(line.replace("\r\n", "<br/>"))
-        #     self.response.out.write(line)
-        self.response.out.write("Angle<br/>")
-        self.response.out.write(angle)
-        self.response.out.write("Diff<br/>")
-        self.response.out.write(diff)
-
-        self.response.out.write("</body></html>")
-
+        obj = UserData.query(UserData.user == user).get()
+        template = JINJA_ENVIRONMENT.get_template('data.html')
+        template_vars = {
+            'phaselist': obj.phaselist
+        }
+        self.response.out.write(template.render(template_vars))
+            
 
 # [START download_handler]
 class ServeDataHandler(blobstore_handlers.BlobstoreDownloadHandler):
-    def get(self, data_key):
+     def get(self, data_key):
         my_key = ndb.Key(urlsafe=data_key) 
         logging.debug('Safeurl key: %s', my_key)
         ludo = my_key.get()
@@ -151,20 +149,20 @@ class ServeDataHandler(blobstore_handlers.BlobstoreDownloadHandler):
             self.error(404)
         else:
             user = users.get_current_user()
-            greeting = ('Welcome, %s! (<a href="%s">sign out</a>)' %(user.nickname(), users.create_logout_url('/')))
-            self.response.write("""<html><head><title>Cristallography</title></head><body>""")
+            greeting = users.create_logout_url('/')
             res = dynamic_png(my_key)
-            self.response.write(res)
             # self.response.write(ludo.phaselist)
             # results_json = json.dumps(res, indent=4, separators=(',\n', ': '))
-            self.response.write("<div>")
-            for word in ludo.phaselist:
-                line = ('%s<br>'%word)
-                self.response.write(line)
-            self.response.write("</div>")
-            self.response.write('<div><br><a href="/csv?key=%s">CSV File</a></div>' % my_key.urlsafe())
-            self.response.write("<div><br>%s</div>" % greeting)
-            self.response.write("""</body></html>""")
+            csv = my_key.urlsafe()
+            template = JINJA_ENVIRONMENT.get_template('chart.html')
+            template_vars = {
+                'phaselist': ludo.phaselist,
+                'url_text': csv,
+                'logout_url': greeting,
+                'user': user.nickname()
+            }
+            self.response.out.write(template.render(template_vars))
+
 # [END download_handler]
 
 class CsvDownloadHandler(webapp2.RequestHandler):

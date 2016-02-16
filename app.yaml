@@ -3,6 +3,9 @@ api_version: 1
 threadsafe: true
  
 handlers:
+- url: /stylesheets
+  static_dir: stylesheets
+  
 - url: /.*
   script: quantdatavision.app
 
@@ -10,4 +13,6 @@ libraries:
 - name: numpy
   version: latest
 - name: matplotlib
+  version: latest
+- name: jinja2
   version: latest

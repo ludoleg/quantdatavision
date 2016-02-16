@@ -1,12 +1,11 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Feb 12 11:36:53 2016
+import globals
 
-@author: philippe
-"""
 import logging
 import numpy as np
-import matplotlib.pyplot as plt
+
+if not globals.OSX:
+    import matplotlib.pyplot as plt
+    
 from math import *
 
 import StringIO
@@ -19,6 +18,7 @@ import StringIO
 # Input xxx.txt containing phase, angle
 # DB, Phase list static
 # Output Plot, list for CSV file generation
+
 
 
 #if xxx = GAE then
@@ -58,11 +58,11 @@ def PhaseAnalyze(XRDdata,difdata,phaselist):
     
     Sum, results = Quantifyinit(angle,diff,BGpoly,DB2T, DBInt, mineral, RIR, enable, difdata, INIsmoothing,OStarget,a,b,Target)
     
-    plot = overplotgraph(angle,diff,BGpoly,Sum, results[0:min(len(results), 10)])
-        
-    return results, plot
-    # return plot
-    # return results
+    if not globals.OSX:
+        plot = overplotgraph(angle,diff,BGpoly,Sum, results[0:min(len(results), 10)])
+        return results, plot        
+    else:
+        return results
 
 ##############################################################################
 #########################  FUNCTION DEFINITIONS #############################
