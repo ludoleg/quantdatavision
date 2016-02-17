@@ -9,8 +9,8 @@ from google.appengine.ext import blobstore
 class UserData(ndb.Model):
     user = ndb.StringProperty()
     blob_key = ndb.BlobKeyProperty()
-    # phaselist = ndb.JsonProperty()
     phaselist = ndb.PickleProperty()
+    avatar = ndb.BlobProperty()
 
 def GenerateChart(obj_key):
     ##############################################################################

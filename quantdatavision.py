@@ -16,6 +16,12 @@ from chart import UserData
 import os
 import jinja2
 
+from io import BytesIO
+
+# [START import_images]
+from google.appengine.api import images
+from PIL import Image
+
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)+ "/templates"),
     extensions=['jinja2.ext.autoescape'],
@@ -25,7 +31,6 @@ import csv
 # import json
 
 def dynamic_png(key):
-
     rv = StringIO.StringIO()
     rv = chart.GenerateChart(key)
     logging.debug(rv)
@@ -34,19 +39,35 @@ def dynamic_png(key):
     else:
         return """<img src="data:image/png;base64,%s"/>""" % rv.getvalue().encode("base64").strip()
 
+# [START image_handler]
+class Image(webapp2.RequestHandler):
+    def get(self):
+        ludo_key = ndb.Key(urlsafe=self.request.get('img_id'))
+        ludo = ludo_key.get()
+        if ludo.avatar:
+            self.response.headers['Content-Type'] = 'image/png'
+            self.response.out.write(ludo.avatar)
+        else:
+            self.response.out.write('No image')
+# [END image_handler]
+        
 class ShowHome(webapp2.RequestHandler):
     def get(self):
-        # Checks for active Google account session
-        title = "Welcome to PLQuant"
-        template = JINJA_ENVIRONMENT.get_template('index.html')
-        template_vars = {
-            'title': title,
-            'user': "Ludo"
-        }
         logging.debug('Starting ShowHome')
+        user_id = users.get_current_user().user_id() 
         user = users.get_current_user()
+        logging.debug('User object instance: %s', user)
+        logging.debug('User id: %s', user_id)
+
+        # Checks for active Google account session
         if user:
             ## Code to render home page
+            title = "Welcome to PLQuant"
+            template = JINJA_ENVIRONMENT.get_template('index.html')
+            template_vars = {
+                'title': title,
+                'user': user
+            }
             self.response.out.write(template.render(template_vars))
             #self.response.headers['Content-Type'] = 'text/html; charset=utf-8'
             #self.response.write('Hello, ' + user.nickname())
@@ -63,17 +84,14 @@ class XRDFileUploadFormHandler(webapp2.RequestHandler):
     def get(self):
         # [START upload_url]
         upload_url = blobstore.create_upload_url('/upload_data')
-        # [END upload_url]
         # [START upload_form]
+        template = JINJA_ENVIRONMENT.get_template('upload.html')
+        template_vars = {
+            'upload_form_url': upload_url
+        }
+        self.response.out.write(template.render(template_vars))
         # To upload files to the blobstore, the request method must be "POST"
         # and enctype must be set to "multipart/form-data".
-        self.response.out.write("""
-<html><body>
-<form action="{0}" method="POST" enctype="multipart/form-data">
-  Upload File: <input type="file" name="file"><br>
-  <input type="submit" name="submit" value="Submit">
-</form>
-</body></html>""".format(upload_url))
         # [END upload_form]
         
 class XRDUploadHandler(blobstore_handlers.BlobstoreUploadHandler):
@@ -85,6 +103,9 @@ class XRDUploadHandler(blobstore_handlers.BlobstoreUploadHandler):
                 user=users.get_current_user().user_id(),
                 blob_key=upload.key())
 
+            if globals.OSX:
+                imgfile = open('cristal.jpg','r')
+                user_data.avatar = imgfile.read()
 
             user_data_key = user_data.put()
 
@@ -129,7 +150,7 @@ class XRDUploadHandler(blobstore_handlers.BlobstoreUploadHandler):
 # [START data_view_handler]
 class ViewDataHandler(webapp2.RequestHandler):
     def get(self):
-        user=users.get_current_user().user_id()
+        user=users.get_current_user()
         logging.debug('User: %s', user)
         obj = UserData.query(UserData.user == user).get()
         template = JINJA_ENVIRONMENT.get_template('data.html')
@@ -137,7 +158,30 @@ class ViewDataHandler(webapp2.RequestHandler):
             'phaselist': obj.phaselist
         }
         self.response.out.write(template.render(template_vars))
-            
+
+class imageHandler(webapp2.RequestHandler):
+    def post(self):
+        user_id = users.get_current_user().user_id() 
+        ludo = UserData.query(UserData.user == user_id).get()
+        avatar = self.request.get('img')
+        logging.debug("starting imageHandler")
+        logging.debug(avatar)
+        avatar = images.resize(avatar, 128, 128)
+        ludo.avatar = avatar
+        ludo.put()
+        self.redirect('/')
+
+class showProfile(webapp2.RequestHandler):
+    def get(self):
+        logging.debug("starting profile")
+        user = users.get_current_user()
+        logging.debug('User: %s', user)
+        template = JINJA_ENVIRONMENT.get_template('profile.html')
+        template_vars = {
+            'user': user,
+            'imageHandler': "/processImage"
+        }
+        self.response.out.write(template.render(template_vars))
 
 # [START download_handler]
 class ServeDataHandler(blobstore_handlers.BlobstoreDownloadHandler):
@@ -145,11 +189,12 @@ class ServeDataHandler(blobstore_handlers.BlobstoreDownloadHandler):
         my_key = ndb.Key(urlsafe=data_key) 
         logging.debug('Safeurl key: %s', my_key)
         ludo = my_key.get()
+        
         if not blobstore.get(ludo.blob_key):
             self.error(404)
         else:
             user = users.get_current_user()
-            greeting = users.create_logout_url('/')
+            logout = users.create_logout_url('/')
             res = dynamic_png(my_key)
             # self.response.write(ludo.phaselist)
             # results_json = json.dumps(res, indent=4, separators=(',\n', ': '))
@@ -158,8 +203,9 @@ class ServeDataHandler(blobstore_handlers.BlobstoreDownloadHandler):
             template_vars = {
                 'phaselist': ludo.phaselist,
                 'url_text': csv,
-                'logout_url': greeting,
-                'user': user.nickname()
+                'logout_url': logout,
+                'user': user.nickname(),
+                'key': my_key.urlsafe()
             }
             self.response.out.write(template.render(template_vars))
 
@@ -190,8 +236,21 @@ app = webapp2.WSGIApplication([
     ('/upload_form',XRDFileUploadFormHandler),
     ('/csv',CsvDownloadHandler),
     ('/chart',DisplayChart),
+    ('/profile',showProfile),
+    ('/processImage',imageHandler),
+    ('/img', Image),
     ('/', ShowHome),
 ], debug=True)
 
 
 
+        # ludo = UserData.query(UserData.user == user_id).get()
+        # logging.debug(ludo)
+        # ludo_key = ludo.key
+        # logging.debug(ludo_key)
+        
+        # ludo_url = ludo_key.urlsafe()
+        # logging.debug(ludo_url)
+        
+# <h1>{{ key }}</h1>
+# <div><img src="/img?img_id={{ key }}"></img>

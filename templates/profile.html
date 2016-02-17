@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ user }}</h1>
+<form action="{{ imageHandler }}"
+                    enctype="multipart/form-data"
+                    method="post">
+  Image:
+  <input type="file" name="img"><br>
+  <input type="submit" name="submit" value="Submit">
+</form>
+{% endblock %}
+
