@@ -54,13 +54,14 @@ class Image(webapp2.RequestHandler):
 class ShowHome(webapp2.RequestHandler):
     def get(self):
         logging.debug('Starting ShowHome')
-        user_id = users.get_current_user().user_id() 
+
         user = users.get_current_user()
         logging.debug('User object instance: %s', user)
-        logging.debug('User id: %s', user_id)
 
         # Checks for active Google account session
         if user:
+            user_id = users.get_current_user().user_id()
+            logging.debug('User id: %s', user_id)
             ## Code to render home page
             title = "Welcome to PLQuant"
             template = JINJA_ENVIRONMENT.get_template('index.html')
