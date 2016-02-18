@@ -8,6 +8,7 @@ Created on Wed Aug 20 16:03:16 2014
 #from scipy.optimize import leastsq
 import numpy as np
 import matplotlib.pyplot as plt
+#from math import sqrt, pi, e, log
 from math import *
 
 """
@@ -265,14 +266,15 @@ def Setparameters():
     # Initialization
     INIsmoothing = False
     OStarget = 0.01
-    Target = "Co"  # choose Cu or Co
-
+    Target = "Co"
     return(BGsmoothing,w,w2,Polyorder,addBG,INIsmoothing,OStarget,a,b,Target)
 
 
 
 def overplotgraph(angle,diff,BGpoly,Sum, graphlist):
+     
     plt.close("all")
+    fig2 = plt.figure(figsize=(15,5)) 
     plt.plot(angle, diff, linestyle="none",  marker=".",  color="black")
     plt.xlabel('2-theta (deg)')
     plt.ylabel('intensity')
@@ -485,14 +487,11 @@ def runprog(filepath1,namesample,filepath2,DBname,phaselist):
 #############   Program parameters   ##########################################
 ##############################################################################
 
-#filepath1='/home/philippe/Documents/Projects/AutoQuant/XRD_data/'
-filepath1='/Users/ludo/Documents/workspace/decoupling/XRD_data/'
+filepath1='XRD_data/'
 namesample = "Mix3A-film.txt"
-#filepath2='/home/philippe/Documents/Projects/AutoQuant/'
-filepath2='/Users/ludo/Documents/workspace/decoupling/'
+filepath2=''
 DBname="Final_AutMin-Database-difdata.txt"
 phaselistname = 'AutMin-phaselist-final.csv'
-
 
 
 
