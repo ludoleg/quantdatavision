@@ -34,10 +34,8 @@ def dynamic_png(key):
     rv = StringIO.StringIO()
     rv = chart.GenerateChart(key)
     logging.debug(rv)
-    if globals.OSX:
-        return rv
-    else:
-        return """<img src="data:image/png;base64,%s"/>""" % rv.getvalue().encode("base64").strip()
+    return rv
+#        return """<img src="data:image/png;base64,%s"/>""" % rv.getvalue().encode("base64").strip()
 
 # [START image_handler]
 class Image(webapp2.RequestHandler):
