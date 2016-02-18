@@ -1,15 +1,9 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>{{ user }}</h1>
-<h3>Mining Data Visualization</h3>
-<ul>
-  <li class="active"><a href="#">Home</a>
-  </li>
-  <li><a href="/view_data">Data Source</a>
-  </li>
-  <li><a href="/chart">Chart</a>
-  </li>
-</ul>
-<p><a href="/upload_form" role="button">Load data</a>
-</p>
+<!-- Main jumbotron for a primary marketing message or call to action -->
+<div class="jumbotron">
+  <h1>Cristallography Distribution Analysis</h1>
+  <p>This analysis tool provides accurate distribution of minerals samples using X-ray diffraction techniques. Upload your database and see the distribution and the list of minerals. Results can be downloaded in the form of a CSV file.</p>
+</div>
+<a class="btn btn-lg btn-primary" href="/upload_form" role="button">Load Database</a>
 {% endblock %}

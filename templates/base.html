@@ -8,7 +8,7 @@
     <meta name="author" content="Ludovic Legrand">
     <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
     <link rel="icon" href="../../favicon.ico">
-    <title>{{ title }}</title>
+    <title>PL Qunant</title>
 
     <!-- Bootstrap core CSS -->
     <link href="/stylesheets/css/bootstrap.min.css" rel="stylesheet">
@@ -29,13 +29,13 @@
             <span class="icon-bar">Deuxieme</span>
             <span class="icon-bar">Troisieme</span>
           </button>
-          <a class="navbar-brand" href="#">Bootstrap theme</a>
+          <a class="navbar-brand" href="#">Quant Vision</a>
         </div>
         <div id="navbar" class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
-            <li class="active"><a href="#">Home</a></li>
+            <li class="active"><a href="/">Home</a></li>
             <li><a href="#about">About</a></li>
-            <li><a href="#contact">Contact</a></li>
+            <li><a href="/chart">Chart</a></li>
             <li class="dropdown">
               <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Dropdown <span class="caret"></span></a>
               <ul class="dropdown-menu">
@@ -55,15 +55,14 @@
 
     <div class="container theme-showcase" role="main">
 
-      <!-- Main jumbotron for a primary marketing message or call to action -->
-      <div class="jumbotron">
-        <h1>Cristallography Distribution Analysis</h1>
-        <p>This analysis tool provides accurate distribution of minerals samples using X-ray diffraction techniques. Upload your database and see the distributionand the list of minerals. Results can be downloaded in the form of a CSV file.</p>
-      </div>
+      {% block content %}{% endblock %}
 
-    <h1>Mining Data Visualization</h1>
-    {% block content %}{% endblock %}
-    <p>© Quant Vision Ludo & Philippe 2016</p>
+      <footer class="footer">
+      <div class="container">
+        <p class="text-muted">© Quant Vision Ludo & Philippe 2016</p>
+      </div>
+      </footer>
+    </div> <!-- /container -->
     
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>

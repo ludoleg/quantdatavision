@@ -1,9 +1,19 @@
 {% extends "base.html" %}
 {% block content %}
-<div>Welcome, {{ user }}! <a href="{{ logout_url }}">Sign out</a></div>
-<div><img src="/img?img_id={{ key }}"></img></div>
-{% for min in phaselist %}
-<div><p>{{ min }}</b></p></div>
-{% endfor %}		  
-<div><br><a href="/csv?key={{ url_text }}">CSV File</a></div>
+<div><img src="/img?img_id={{ key }}" class="img-rounded"></img></div>
+<table class="table">
+  <tr>
+    <th>Mineral</th>
+    <th>Value</th> 
+  </tr>
+  {%- for row in phaselist %}
+  <tr>
+  {%- for column in row %}
+    <td>{{ column }}</td>
+  {%- endfor %}
+  </tr>
+{%- endfor %}
+</table>
+<div><a href="/csv?key={{ url_text }}" type="button" class="btn btn-lg btn-success">CSV</button></a></div>
 {% endblock %}
+
