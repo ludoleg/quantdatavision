@@ -1,4 +1,4 @@
-#import globals
+import globals
 import logging
 import phaseanalyze as QUANT
 from google.appengine.ext import ndb
@@ -32,49 +32,29 @@ def GenerateChart(obj_key):
     DBname = "Final_AutMin-Database-difdata.txt"
     difdata = open(DBname, 'r').readlines()
 
-    # logging.debug(phaselist)
-        
-    # rv_plot = QUANT.PhaseAnalyze(XRDdata,difdata,phaselist)
-    # if globals.OSX:
-    #     results = QUANT.PhaseAnalyze(XRDdata,difdata,phaselist)
-    # else:
-    #     results, rv_plot = QUANT.PhaseAnalyze(XRDdata,difdata,phaselist)
-
-    rv_plot = StringIO.StringIO()
-    results, rv_plot = QUANT.PhaseAnalyze(XRDdata,difdata,phaselist)
-
+    if globals.OSX:
+        results = QUANT.PhaseAnalyze(XRDdata,difdata,phaselist)
+        file = open("cristal.jpg")
+        ludo.avatar = file.read()
+    else:
+        rv_plot = StringIO.StringIO()
+        results, rv_plot = QUANT.PhaseAnalyze(XRDdata,difdata,phaselist)
+        rv_plot.seek(0)
+        image = Image.open(rv_plot)
+        width, height = image.size
+        logging.info("w: {} h: {}".format(width, height))
+        ludo.avatar = rv_plot.getvalue()
+    
     ludo.phaselist = results
-
-    rv_plot.seek(0)
-
-    # This scaling code does not seem to work??
-
-    image = Image.open(rv_plot)
-    width, height = image.size
-    logging.info("w: {} h: {}".format(width, height))
-    
-    # image.resize((500,200),Image.NEAREST)
-
-    # cimage = io.BytesIO()
-    # image.save(cimage,'png')
-    # cimage.seek(0)  # rewind to the start
-    # ludo.avatar = cimage.getvalue()
-
-    ludo.avatar = rv_plot.getvalue()
     ludo.put()
-    
     logging.debug(ludo)
     logging.info("Done with processing")
 
     return results
-    
-#    if globals.OSX:
-   #     return results
- #   else:
-  #      return rv_plot
-    
-    # return results, rv_plot
-    # return results
 
-
-
+    # This scaling code does not seem to work??
+    # image.resize((500,200),Image.NEAREST)
+    # cimage = io.BytesIO()
+    # image.save(cimage,'png')
+    # cimage.seek(0)  # rewind to the start
+    # ludo.avatar = cimage.getvalue()
