@@ -78,6 +78,11 @@ class DisplayChart(webapp2.RequestHandler):
     def get(self):
         template = JINJA_ENVIRONMENT.get_template('displayChart.html')
         self.response.out.write(template.render())
+        
+class setPhase(webapp2.RequestHandler):
+    def get(self):
+        template = JINJA_ENVIRONMENT.get_template('phase.html')
+        self.response.out.write(template.render())
          
 class XRDFileUploadFormHandler(webapp2.RequestHandler):
     def get(self):
@@ -241,6 +246,7 @@ app = webapp2.WSGIApplication([
     ('/profile',showProfile),
     ('/processImage',imageHandler),
     ('/img', Image),
+    ('/phase', setPhase),
     ('/', ShowHome),
 ], debug=True)
 

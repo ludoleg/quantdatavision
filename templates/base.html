@@ -7,18 +7,24 @@
     <meta name="description" content="Quant Vision">
     <meta name="author" content="Ludovic Legrand">
     <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
-    <link rel="icon" href="favicon.ico">
     <title>PL Quant</title>
 
     <!-- Bootstrap core CSS -->
     <link href="/stylesheets/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap theme -->
     <link href="/stylesheets/css/bootstrap-theme.min.css" rel="stylesheet">
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <link href="../../assets/css/ie10-viewport-bug-workaround.css" rel="stylesheet">
+
     <!-- Custom styles for this template -->
     <link href="/stylesheets/css/theme.css" rel="stylesheet">
+    <!-- Custom styles for this template -->
+    <link href="/stylesheets/css/sticky-footer-navbar.css" rel="stylesheet">
     
   </head>
+
   <body role="document">
+
     <!-- Fixed navbar -->
     <nav class="navbar navbar-inverse navbar-fixed-top">
       <div class="container">
@@ -29,7 +35,7 @@
             <span class="icon-bar">Deuxieme</span>
             <span class="icon-bar">Troisieme</span>
           </button>
-          <a class="navbar-brand" href="#">Quant Vision</a>
+          <a class="navbar-brand" href="/">Quant Vision</a>
         </div>
         <div id="navbar" class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
@@ -37,9 +43,9 @@
             <li><a href="#about">About</a></li>
             <li><a href="/chart">Chart</a></li>
             <li class="dropdown">
-              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Dropdown <span class="caret"></span></a>
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Settings<span class="caret"></span></a>
               <ul class="dropdown-menu">
-                <li><a href="#">Action</a></li>
+                <li><a href="/phase">Set Phases...</a></li>
                 <li><a href="#">Another action</a></li>
                 <li><a href="#">Something else here</a></li>
                 <li role="separator" class="divider"></li>
@@ -54,15 +60,14 @@
     </nav>
 
     <div class="container theme-showcase" role="main">
-
       {% block content %}{% endblock %}
+    </div> <!-- /container -->
 
-      <footer class="footer">
+    <footer class="footer">
       <div class="container">
         <p class="text-muted">© Quant Vision Ludo & Philippe 2016</p>
       </div>
-      </footer>
-    </div> <!-- /container -->
+    </footer>
     
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
