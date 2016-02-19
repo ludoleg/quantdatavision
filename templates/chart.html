@@ -1,6 +1,14 @@
 {% extends "base.html" %}
 {% block content %}
-<div><img src="/img?img_id={{ key }}" width="1000" height="400"></img></div>
+<div class="panel panel-primary">
+  <div class="panel-heading">
+    <h3 class="panel-title">Sample File</h3>
+  </div>
+  <div class="panel-body">
+    {{ samplename }}
+  </div>
+</div>
+  <div><img src="/img?img_id={{ key }}" class="img-responsive"></img></div>
 <table class="table">
   <tr>
     <th>Mineral</th>
