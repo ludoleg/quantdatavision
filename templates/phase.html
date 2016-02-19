@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+  <h1>Phase Profile</h1>
+</div>
+  <div class="row">
+    <div class="col-sm-2">
+      <select id="leftValues" multiple="multiple" class="form-control" size="20">
+	<option value="Quartz">Quartz</option>
+	<option value="Microcline">Tomatoes</option>
+	<option value="Fluorite">Mozzarella</option>
+	<option value="Corundrum">Mushrooms</option>
+	<option value="Calcite">Pepperoni</option>
+	<option value="Quartz">Quartz</option>
+	<option value="Microcline">Tomatoes</option>
+	<option value="Fluorite">Mozzarella</option>
+	<option value="Corundrum">Mushrooms</option>
+	<option value="Calcite">Pepperoni</option>
+	<option value="Quartz">Quartz</option>
+	<option value="Microcline">Tomatoes</option>
+	<option value="Fluorite">Mozzarella</option>
+	<option value="Corundrum">Mushrooms</option>
+	<option value="Calcite">Pepperoni</option>
+      </select>
+    </div>
+    <div class="col-sm-1 from-control">
+      <input type="button" id="btnLeft" value="&lt;&lt;" />
+      <input type="button" id="btnRight" value="&gt;&gt;" />
+    </div>
+    <div class="col-sm-2">
+      <select id="rightValues" multiple="multiple" class="form-control" size="10">
+      </select>
+    </div>
+  </div>
+<p>
+  <button type="submit" class="btn btn-primary">Save Phase Profile</button>
+</p>
+<script>
+$("#btnLeft").click(function () {
+    var selectedItem = $("#rightValues option:selected");
+    $("#leftValues").append(selectedItem);
+});
+
+$("#btnRight").click(function () {
+    var selectedItem = $("#leftValues option:selected");
+    $("#rightValues").append(selectedItem);
+});
+
+$("#rightValues").change(function () {
+    var selectedItem = $("#rightValues option:selected");
+    $("#txtRight").val(selectedItem.text());
+});
+</script>
+{% endblock %}
