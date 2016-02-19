@@ -9,6 +9,8 @@ import StringIO
 # import io
 from PIL import Image
 
+# import handler
+
 # This datastore model keeps track of which users uploaded which photos.
 class UserData(ndb.Model):
     user = ndb.StringProperty()
@@ -24,6 +26,14 @@ def GenerateChart(obj_key):
     ludo = obj_key.get()
     # logging.debug(ludo)
     blob_reader = blobstore.BlobReader(ludo.blob_key)
+    blob_info = blobstore.BlobInfo.get(ludo.blob_key)
+    filename = blob_info.filename
+
+    # logging.debug("Filename: {}".format(filename))
+
+
+    # Logic to parse correct file
+
     
     XRDdata = blob_reader #file handle - not the name of the file
 
@@ -42,12 +52,12 @@ def GenerateChart(obj_key):
         rv_plot.seek(0)
         image = Image.open(rv_plot)
         width, height = image.size
-        logging.info("w: {} h: {}".format(width, height))
+        # logging.info("w: {} h: {}".format(width, height))
         ludo.avatar = rv_plot.getvalue()
     
     ludo.phaselist = results
     ludo.put()
-    logging.debug(ludo)
+    # logging.debug(ludo)
     logging.info("Done with processing")
 
     return results

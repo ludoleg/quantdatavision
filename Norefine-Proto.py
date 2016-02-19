@@ -274,7 +274,8 @@ def Setparameters():
 def overplotgraph(angle,diff,BGpoly,Sum, graphlist):
      
     plt.close("all")
-    fig2 = plt.figure(figsize=(15,5)) 
+    fig2 = plt.figure(figsize=(10,3)) 
+    # fig2 = plt.figure(figsize=(15,5)) 
     plt.plot(angle, diff, linestyle="none",  marker=".",  color="black")
     plt.xlabel('2-theta (deg)')
     plt.ylabel('intensity')

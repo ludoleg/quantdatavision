@@ -30,7 +30,7 @@ def PhaseAnalyze(XRDdata,difdata,phaselist):
     angle, diff = np.loadtxt(XRDdata, unpack=True)
     BGpoly = BGfit(angle, diff, BGsmoothing, w, w2, Polyorder)
 
-    logging.debug('Starting PhaseAnalysis')
+    # logging.debug('Starting PhaseAnalysis')
     # logging.debug(phaselist)
     
     ##########  Open minerals list   #############################################
