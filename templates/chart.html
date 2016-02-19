@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% block content %}
-<div><img src="/img?img_id={{ key }}" width="800" height="400"></img></div>
+<div><img src="/img?img_id={{ key }}" width="1000" height="400"></img></div>
 <table class="table">
   <tr>
     <th>Mineral</th>
-    <th>Value</th> 
+    <th>Mass %</th> 
   </tr>
   {%- for row in phaselist %}
   <tr>

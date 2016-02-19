@@ -30,7 +30,7 @@ def PhaseAnalyze(XRDdata,difdata,phaselist):
     angle, diff = np.loadtxt(XRDdata, unpack=True)
     BGpoly = BGfit(angle, diff, BGsmoothing, w, w2, Polyorder)
 
-    logging.debug('Starting PhaseAnalysis')
+    # logging.debug('Starting PhaseAnalysis')
     # logging.debug(phaselist)
     
     ##########  Open minerals list   #############################################
@@ -58,14 +58,11 @@ def PhaseAnalyze(XRDdata,difdata,phaselist):
     
     Sum, results = Quantifyinit(angle,diff,BGpoly,DB2T, DBInt, mineral, RIR, enable, difdata, INIsmoothing,OStarget,a,b,Target)
     
-    plot = overplotgraph(angle,diff,BGpoly,Sum, results[0:min(len(results), 10)])
-    return results, plot        
-
-    # if not globals.OSX:
-    #     plot = overplotgraph(angle,diff,BGpoly,Sum, results[0:min(len(results), 10)])
-    #     return results, plot        
-    # else:
-    #     return results
+    if not globals.OSX:
+        plot = overplotgraph(angle,diff,BGpoly,Sum, results[0:min(len(results), 10)])
+        return results, plot        
+    else:
+        return results
 
 ##############################################################################
 #########################  FUNCTION DEFINITIONS #############################

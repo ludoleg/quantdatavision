@@ -109,11 +109,11 @@ class XRDUploadHandler(blobstore_handlers.BlobstoreUploadHandler):
             user_data_key = user_data.put()
 
             # NDB instance Key
-            logging.info(user_data_key)
+            logging.debug(user_data_key)
 
             # NDB get instance from Key
             ludo = user_data_key.get()
-            logging.info("ludo: %s", ludo)
+            logging.debug("ludo: %s", ludo)
 
             kind_string = user_data_key.kind()
             logging.debug(kind_string)
@@ -134,10 +134,10 @@ class XRDUploadHandler(blobstore_handlers.BlobstoreUploadHandler):
             logging.debug(kind_string)
             id = key.id()
                         
-            logging.info(user_data)
+            logging.debug(user_data)
             # user_data_key = ndb.Key('UserData', user_data)
 
-            logging.info('User_data: %s', user_data.user)
+            logging.debug('User_data: %s', user_data.user)
             logging.debug('Blobkey: %s', user_data.blob_key)
 
             #self.redirect('/serve_data/%s' % upload.key())
@@ -226,7 +226,7 @@ class CsvDownloadHandler(webapp2.RequestHandler):
 
     
 ## Here is the WSGI application instance that routes requests
-logging.getLogger().setLevel(logging.DEBUG)
+logging.getLogger().setLevel(logging.INFO)
 
 app = webapp2.WSGIApplication([
     ('/view_data',ViewDataHandler),
