@@ -195,6 +195,8 @@ class ServeDataHandler(blobstore_handlers.BlobstoreDownloadHandler):
             user = users.get_current_user()
             logout = users.create_logout_url('/')
             res = dynamic_png(my_key)
+            blob_info = blobstore.BlobInfo.get(ludo.blob_key)
+            filename = blob_info.filename
             # self.response.write(ludo.phaselist)
             # results_json = json.dumps(res, indent=4, separators=(',\n', ': '))
             csv = my_key.urlsafe()
@@ -204,7 +206,8 @@ class ServeDataHandler(blobstore_handlers.BlobstoreDownloadHandler):
                 'url_text': csv,
                 'logout_url': logout,
                 'user': user.nickname(),
-                'key': my_key.urlsafe()
+                'key': my_key.urlsafe(),
+                'samplename': filename
             }
             self.response.out.write(template.render(template_vars))
 
@@ -221,7 +224,7 @@ class CsvDownloadHandler(webapp2.RequestHandler):
     self.response.headers['Content-Type'] = 'text/csv'
     self.response.headers['Content-Disposition'] = 'attachment; filename=phaselist.csv'
     writer = csv.writer(self.response.out)
-    writer.writerow(['Mineral','Value'])
+    writer.writerow(['Mineral','Mass %'])
     writer.writerows(user.phaselist)
 
     

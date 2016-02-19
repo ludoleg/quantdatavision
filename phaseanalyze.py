@@ -25,6 +25,8 @@ import StringIO
 #else
 
 def PhaseAnalyze(XRDdata,difdata,phaselist):
+
+    logging.debug("Start phaseanalyze")
     
     BGsmoothing,w,w2,Polyorder,addBG,INIsmoothing,OStarget,a,b,Target = Setparameters()
     angle, diff = np.loadtxt(XRDdata, unpack=True)
@@ -51,13 +53,21 @@ def PhaseAnalyze(XRDdata,difdata,phaselist):
     
     #######################   Extract from difdata      ############
     
+    logging.info("Starting extracting from difdata")
+
     DB, RIRcalc, peakcount = makeDB(difdata, mineral, enable, Target)
     DB2T = DB[:,:,0]
     DBInt = DB[:,:,1]
     #print 'peakcount = ', peakcount
+
+    logging.info("Done making DB")
     
     Sum, results = Quantifyinit(angle,diff,BGpoly,DB2T, DBInt, mineral, RIR, enable, difdata, INIsmoothing,OStarget,a,b,Target)
+
+    logging.info("Done computing - starting drawing")
     
+    logging.debug("Done phaseanalyze")
+
     if not globals.OSX:
         plot = overplotgraph(angle,diff,BGpoly,Sum, results[0:min(len(results), 10)])
         return results, plot        

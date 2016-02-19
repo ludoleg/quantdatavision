@@ -30,10 +30,7 @@ def GenerateChart(obj_key):
     filename = blob_info.filename
 
     # logging.debug("Filename: {}".format(filename))
-
-
     # Logic to parse correct file
-
     
     XRDdata = blob_reader #file handle - not the name of the file
 
@@ -42,6 +39,8 @@ def GenerateChart(obj_key):
     DBname = "Final_AutMin-Database-difdata.txt"
     difdata = open(DBname, 'r').readlines()
 
+    logging.info("Start Quant.phase...")
+    
     if globals.OSX:
         results = QUANT.PhaseAnalyze(XRDdata,difdata,phaselist)
         file = open("cristal.jpg")
