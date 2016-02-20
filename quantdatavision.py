@@ -16,11 +16,15 @@ from chart import UserData
 import os
 import jinja2
 
-from io import BytesIO
-
 # [START import_images]
 from google.appengine.api import images
 from PIL import Image
+
+import numpy as np
+from scipy import special, optimize
+
+if not globals.OSX:
+    import matplotlib.pyplot as plt
 
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)+ "/templates"),
@@ -37,18 +41,6 @@ def dynamic_png(key):
     return rv
 #        return """<img src="data:image/png;base64,%s"/>""" % rv.getvalue().encode("base64").strip()
 
-# [START image_handler]
-class Image(webapp2.RequestHandler):
-    def get(self):
-        ludo_key = ndb.Key(urlsafe=self.request.get('img_id'))
-        ludo = ludo_key.get()
-        if ludo.avatar:
-            self.response.headers['Content-Type'] = 'image/png'
-            self.response.out.write(ludo.avatar)
-        else:
-            self.response.out.write('No image')
-# [END image_handler]
-        
 class ShowHome(webapp2.RequestHandler):
     def get(self):
         logging.debug('Starting ShowHome')
@@ -78,6 +70,38 @@ class DisplayChart(webapp2.RequestHandler):
     def get(self):
         template = JINJA_ENVIRONMENT.get_template('displayChart.html')
         self.response.out.write(template.render())
+
+class testscipy(webapp2.RequestHandler):
+    def get(self):
+        # Parse command-line arguments
+        # parser = argparse.ArgumentParser(usage=__doc__)
+        # parser.add_argument("--order", type=int, default=3, help="order of Bessel function")
+        # parser.add_argument("--output", default="plot.png", help="output image file")
+        # args = parser.parse_args()
+
+        # Compute maximum
+        
+        f = lambda x: -special.jv(3, x)
+        sol = optimize.minimize(f, 1.0)
+
+        # Plot
+        x = np.linspace(0, 10, 5000)
+        # plt.plot(x, special.jv(args.order, x), '-', sol.x, -sol.fun, 'o')
+
+        if not globals.OSX:
+            plt.plot(x, special.jv(3, x), '-', sol.x, -sol.fun, 'o')
+            rv_plot = StringIO.StringIO()
+            # Produce output
+            # plt.savefig(args.output, dpi=96)
+            plt.title("SciPy PNG")
+            plt.savefig(rv_plot, dpi=96, format="png")
+            plt.clf()
+            png_img = """<img src="data:image/png;base64,%s"/>""" % rv_plot.getvalue().encode("base64").strip()
+        self.response.write("""<html><head/><body>""")
+        self.response.write("Scipy")
+        if not globals.OSX:
+            self.response.write(png_img)
+        self.response.write("""</body> </html>""")
         
 class setPhase(webapp2.RequestHandler):
     def get(self):
@@ -247,6 +271,7 @@ app = webapp2.WSGIApplication([
     ('/processImage',imageHandler),
     ('/img', Image),
     ('/phase', setPhase),
+    ('/scipy', testscipy),
     ('/', ShowHome),
 ], debug=True)
 
