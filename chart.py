@@ -1,6 +1,6 @@
 import globals
 import logging
-import phaseanalyze as QUANT
+import QXRDconductor
 from google.appengine.ext import ndb
 from google.appengine.ext import blobstore
 
@@ -10,6 +10,9 @@ import StringIO
 from PIL import Image
 
 # import handler
+
+Lambda = ''
+Target = ''
 
 # This datastore model keeps track of which users uploaded which photos.
 class UserData(ndb.Model):
@@ -29,25 +32,26 @@ def GenerateChart(obj_key):
     blob_info = blobstore.BlobInfo.get(ludo.blob_key)
     filename = blob_info.filename
 
-    # logging.debug("Filename: {}".format(filename))
+    logging.debug("Filename: {}".format(filename))
     # Logic to parse correct file
     
     XRDdata = blob_reader #file handle - not the name of the file
 
-    phaselistname = "AutMin-phaselist-final.csv"
+    phaselistname = 'phaselist.csv'
     phaselist = open(phaselistname, 'r').readlines()
-    DBname = "Final_AutMin-Database-difdata.txt"
+    DBname = "reduced_difdata.txt"
     difdata = open(DBname, 'r').readlines()
 
     logging.info("Start Quant.phase...")
     
     if globals.OSX:
-        results = QUANT.PhaseAnalyze(XRDdata,difdata,phaselist)
+    #    results = QUANT.PhaseAnalyze(XRDdata,difdata,phaselist)
         file = open("cristal.jpg")
         ludo.avatar = file.read()
     else:
         rv_plot = StringIO.StringIO()
-        results, rv_plot = QUANT.PhaseAnalyze(XRDdata,difdata,phaselist)
+        twoT, diff = QXRDconductor.openXRD(XRDdata, filename)
+        results, rv_plot = QXRDconductor.Qanalyze(twoT, diff ,difdata, phaselist, Lambda, Target)
         rv_plot.seek(0)
         image = Image.open(rv_plot)
         width, height = image.size
@@ -57,9 +61,11 @@ def GenerateChart(obj_key):
     ludo.phaselist = results
     ludo.put()
     # logging.debug(ludo)
+
+    logging.debug(results)
     logging.info("Done with processing")
 
-    return results
+    return diff
 
     # This scaling code does not seem to work??
     # image.resize((500,200),Image.NEAREST)
