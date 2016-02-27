@@ -138,16 +138,13 @@ class XRDFileUploadFormHandler(webapp2.RequestHandler):
 class XRDUploadHandler(blobstore_handlers.BlobstoreUploadHandler):
     def post(self):
         try:
-            logging.debug('Starting Upload')
+            logging.debug('Starting Upload = ok whats going on')
             upload = self.get_uploads()[0]
             user_data = UserData(
                 user=users.get_current_user().user_id(),
                 blob_key=upload.key())
 
-            if globals.OSX:
-                imgfile = open('cristal.jpg','r')
-                user_data.avatar = imgfile.read()
-
+            logging.debug("key: %s", upload.key)
             user_data_key = user_data.put()
 
             # NDB instance Key

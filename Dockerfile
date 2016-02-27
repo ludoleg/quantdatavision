@@ -3,7 +3,7 @@ FROM gcr.io/google_appengine/python-compat-multicore
 # Install scipy dependences
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        python-scipy
+        python-tk python-numpy python-scipy python-matplotlib python-crcmod python-lxml
 
 # Add app code
 ADD . /app/

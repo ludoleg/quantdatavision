@@ -2,7 +2,11 @@ import globals
 import logging
 import numpy as np
 # if not globals.OSX:
+
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+
 from QXRDtools import *
 from math import *
 import StringIO
