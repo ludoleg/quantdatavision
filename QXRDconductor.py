@@ -1,7 +1,5 @@
-import globals
 import logging
 import numpy as np
-# if not globals.OSX:
 
 import matplotlib
 matplotlib.use('Agg')
@@ -211,12 +209,6 @@ def Qanalyze(angle, diff, difdata, phaselist, Lambda, Target):
     
     plot = overplotgraph(angle,diff,BGpoly,Sum, results[0:min(10,len(mineral))])
     return results, plot
-    
-    # if not globals.OSX:
-    #     plot = overplotgraph(angle,diff,BGpoly,Sum, results[0:min(len(results), 10)])
-    #     return plot        
-    # else:
-    #     return results
 
 
 

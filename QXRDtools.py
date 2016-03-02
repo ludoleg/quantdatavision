@@ -1,38 +1,28 @@
-
-"""
-Created on Wed Aug 20 16:03:16 2014
-
-@author: philippe
-"""
-
 from scipy.optimize import leastsq
 import numpy as np
 from math import *
 import logging
 
-
-
-def openXRD(filename, nomdufichier):
+def openXRD(blob, nomdufichier):
     """
    Opens an XRD file and returns two 1D array for 2theta and Intensity
    possible formats: TXT, PLV, DIF, MDI   ....   more to come
     """
-
+    logging.debug("Starting openXRD")
     if nomdufichier.endswith(".plv"): 
         jump=50
-        # XRDdata = open(filename, 'r').readlines()[jump:]
-        XRDdata = filename.readlines()[jump:]
+        XRDdata = blob.readlines()[jump:]
+        # XRDdata = blob.open().readlines()[jump:]
         angle, diff = np.loadtxt(XRDdata, unpack=True)
        
     elif nomdufichier.endswith(".txt"):
         jump=7
-        XRDdata = filename.readlines()[jump:]
-        # XRDdata = open(filename, 'r').readlines()[jump:]
+        XRDdata = blob.readlines()[jump:]
+        # XRDdata = blob.open().readlines()[jump:]
         angle, diff = np.loadtxt(XRDdata, unpack=True)
         
     elif nomdufichier.endswith(".dif") or nomdufichier.endswith(".mdi"):
-        # dif = open(filename, 'r').readlines()
-        dif = filename.readlines()
+        dif = blob.readlines()
         paramline = dif[1]
         start, step, unknown, target, Lambda, stop, number = paramline.split()
         start=float(start)

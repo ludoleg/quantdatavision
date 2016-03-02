@@ -13,3 +13,6 @@ venv
 secret_keys.py
 =======
 *.pyc
+
+# Ignore all emacs backup files
+*~

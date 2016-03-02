@@ -1,2 +1,0 @@
-# OSX = True
-OSX = False
