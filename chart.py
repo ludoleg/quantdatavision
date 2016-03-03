@@ -43,11 +43,6 @@ def GenerateChart(obj_key):
     # logging.debug(XRDdata)
     logging.info("Start Quant.phase...")
     
-    #if globals.OSX:
-    #    results = QUANT.PhaseAnalyze(XRDdata,difdata,phaselist)
-    #    file = open("cristal.jpg")
-    #    ludo.avatar = file.read()
-    # else:
     rv_plot = StringIO.StringIO()
     twoT, diff = QXRDconductor.openXRD(XRDdata, filename)
     results, rv_plot = QXRDconductor.Qanalyze(twoT, diff, difdata, phaselist, Lambda, Target)
