@@ -9,6 +9,11 @@ manual_scaling:
 handlers:
 - url: /stylesheets
   static_dir: stylesheets
-  
+
+- url: /phaselist.json
+  static_files: phaselist.json
+  upload: phaselist.json
+  application_readable: true
+
 - url: /.*
   script: quantdatavision.app

@@ -2,6 +2,8 @@ import webapp2
 from google.appengine.ext import ndb
 from google.appengine.api import users
 
+import cgi
+
 import logging
 import chart
 from chart import UserData
@@ -157,6 +159,13 @@ class CsvDownloadHandler(webapp2.RequestHandler):
     writer.writerow(['Mineral','Mass %'])
     writer.writerows(user.phaselist)
 
+class handlePhase(webapp2.RequestHandler):
+    def get(self):
+        phaselist = self.request.get_all('phase')
+        self.response.write("""<html><head/><body>""")
+        logging.info(phaselist)
+        self.response.write("""</body> </html>""")
+    
 class processFile(webapp2.RequestHandler):
     def post(self):
         logging.debug("Loading File")
@@ -204,6 +213,7 @@ app = webapp2.WSGIApplication([
     ('/phase', setPhase),
     ('/scipy', testscipy),
     ('/process', processFile),
+    ('/savePhase', handlePhase),
     ('/upload_form', FileUploadFormHandler ),
     ('/', ShowHome),
 ], debug=True)

@@ -3,39 +3,38 @@
 <div class="page-header">
   <h1>Phase Profile</h1>
 </div>
+<form action="/savePhase">
+  <div class="container">
   <div class="row">
-    <div class="col-sm-2">
+    <div class="col-xs-3">
       <select id="leftValues" multiple="multiple" class="form-control" size="20">
-	<option value="Quartz">Quartz</option>
-	<option value="Microcline">Tomatoes</option>
-	<option value="Fluorite">Mozzarella</option>
-	<option value="Corundrum">Mushrooms</option>
-	<option value="Calcite">Pepperoni</option>
-	<option value="Quartz">Quartz</option>
-	<option value="Microcline">Tomatoes</option>
-	<option value="Fluorite">Mozzarella</option>
-	<option value="Corundrum">Mushrooms</option>
-	<option value="Calcite">Pepperoni</option>
-	<option value="Quartz">Quartz</option>
-	<option value="Microcline">Tomatoes</option>
-	<option value="Fluorite">Mozzarella</option>
-	<option value="Corundrum">Mushrooms</option>
-	<option value="Calcite">Pepperoni</option>
       </select>
     </div>
-    <div class="col-sm-1 from-control">
+    <div class="col-xs-3" class="form-control">
       <input type="button" id="btnLeft" value="&lt;&lt;" />
       <input type="button" id="btnRight" value="&gt;&gt;" />
     </div>
-    <div class="col-sm-2">
-      <select id="rightValues" multiple="multiple" class="form-control" size="10">
+    <div class="col-xs-3">
+      <select name="phase" id="rightValues" multiple="multiple" class="form-control" size="20">
       </select>
-    </div>
+  </div>
+  </div>
   </div>
 <p>
   <button type="submit" class="btn btn-primary">Save Phase Profile</button>
 </p>
+</form>
 <script>
+var $select = $("#leftValues");
+$.getJSON("/phaselist.json", function(data){
+	$select.html('');
+	var listitems;
+	$.each(data, function(key, value){
+		listitems += '<option value=' + key + '>' + key + '</option>';
+	});
+	$select.append(listitems);
+});
+
 $("#btnLeft").click(function () {
     var selectedItem = $("#rightValues option:selected");
     $("#leftValues").append(selectedItem);
