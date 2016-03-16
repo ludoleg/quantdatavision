@@ -3,6 +3,9 @@ import numpy as np
 from math import *
 import logging
 
+# this file includes tools for computing stuff
+
+
 def openXRD(blob, nomdufichier):
     """
    Opens an XRD file and returns two 1D array for 2theta and Intensity
