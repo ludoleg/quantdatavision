@@ -6,7 +6,7 @@ import cgi
 
 import logging
 import chart
-from chart import UserData
+from chart import SessionData
 import StringIO
 
 import os
@@ -39,7 +39,7 @@ class renderImage(webapp2.RequestHandler):
         ludo_key = ndb.Key(urlsafe=self.request.get('img_id'))
         ludo = ludo_key.get()
         user_id = users.get_current_user().user_id()
-        ludo = UserData.query(UserData.user == user_id).get()
+        ludo = SessionData.query(SessionData.user == user_id).get()
         if ludo.avatar:
             self.response.headers['Content-Type'] = 'image/png'
             self.response.out.write(ludo.avatar)
@@ -111,7 +111,7 @@ class ViewDataHandler(webapp2.RequestHandler):
     def get(self):
         user=users.get_current_user()
         logging.debug('User: %s', user)
-        obj = UserData.query(UserData.user == user).get()
+        obj = SessionData.query(SessionData.user == user).get()
         template = JINJA_ENVIRONMENT.get_template('data.html')
         template_vars = {
             'phaselist': obj.phaselist
@@ -121,7 +121,7 @@ class ViewDataHandler(webapp2.RequestHandler):
 class imageHandler(webapp2.RequestHandler):
     def post(self):
         user_id = users.get_current_user().user_id() 
-        ludo = UserData.query(UserData.user == user_id).get()
+        ludo = SessionData.query(SessionData.user == user_id).get()
         avatar = self.request.get('img')
         logging.debug("starting imageHandler")
         logging.debug(avatar)
@@ -168,15 +168,21 @@ class handlePhase(webapp2.RequestHandler):
     
 class processFile(webapp2.RequestHandler):
     def post(self):
-        logging.debug("Loading File")
+        logging.debug("Loading File...")
         user = users.get_current_user()
+        if user:
+            logging.debug('User signed, object instance: %s', user)
+        logging.debug(user.user_id())
+        logging.debug(user.nickname())
         logout = users.create_logout_url('/')
         user_id = users.get_current_user().user_id()
-        ludo = UserData.query(UserData.user == user_id).get()
+        logging.debug(user_id)
+        ludo = SessionData.query(SessionData.user == user_id).get()
+        if not ludo:
+            ludo = SessionData(user=user_id)
         ludo.sampleBlob = self.request.get('file')
         ludo.sampleFilename = self.request.params["file"].filename
         user_data_key = ludo.put()
-        logging.debug(ludo)
         logging.debug(ludo.sampleFilename)
         logging.debug(user_data_key)
         res = dynamic_png(user_data_key)

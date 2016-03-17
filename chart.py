@@ -1,5 +1,5 @@
 import logging
-import QXRDconductor
+import Conductor
 from google.appengine.ext import ndb
 
 import StringIO
@@ -9,7 +9,7 @@ Lambda = ''
 Target = ''
 
 # This datastore model keeps track of which users uploaded which photos.
-class UserData(ndb.Model):
+class SessionData(ndb.Model):
     user = ndb.StringProperty()
     phaselist = ndb.PickleProperty()
     avatar = ndb.BlobProperty()
