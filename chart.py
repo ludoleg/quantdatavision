@@ -1,5 +1,5 @@
 import logging
-import Conductor
+import QXRDconductor
 from google.appengine.ext import ndb
 
 import StringIO
