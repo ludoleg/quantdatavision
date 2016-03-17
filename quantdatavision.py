@@ -162,9 +162,8 @@ class CsvDownloadHandler(webapp2.RequestHandler):
 class handlePhase(webapp2.RequestHandler):
     def get(self):
         phaselist = self.request.get_all('phase')
-        self.response.write("""<html><head/><body>""")
         logging.info(phaselist)
-        self.response.write("""</body> </html>""")
+        self.redirect('/')
     
 class processFile(webapp2.RequestHandler):
     def post(self):
@@ -179,7 +178,7 @@ class processFile(webapp2.RequestHandler):
         logging.debug(user_id)
         ludo = SessionData.query(SessionData.user == user_id).get()
         if not ludo:
-            ludo = SessionData(user=user_id)
+            ludo = SessionData(user=user_id, email=user.nickname())
         ludo.sampleBlob = self.request.get('file')
         ludo.sampleFilename = self.request.params["file"].filename
         user_data_key = ludo.put()
@@ -217,6 +216,7 @@ app = webapp2.WSGIApplication([
     ('/processImage',imageHandler),
     ('/img', renderImage),
     ('/phase', setPhase),
+    ('/calibration', setPhase),
     ('/scipy', testscipy),
     ('/process', processFile),
     ('/savePhase', handlePhase),

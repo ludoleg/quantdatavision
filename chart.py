@@ -11,12 +11,12 @@ Target = ''
 # This datastore model keeps track of which users uploaded which photos.
 class SessionData(ndb.Model):
     user = ndb.StringProperty()
+    email = ndb.StringProperty()
     phaselist = ndb.PickleProperty()
     avatar = ndb.BlobProperty()
     sampleFilename = ndb.StringProperty()
     sampleBlob = ndb.BlobProperty()
     
-
 def GenerateChart(obj_key):
     ##############################################################################
     ############   Program parameters   ##########################################

@@ -8,8 +8,7 @@
       enctype="multipart/form-data">
     <div class="form-group">
       <label for="databaseUploadFile">Upload File</label>
-      <input type="file" name="file" id="uploadFile">
+      <input type="file" name="file" id="uploadFile" onchange="this.form.submit()">
     </div>
-    <button type="submit" class="btn btn-primary">Submit</button>
   </form>
 {% endblock %}
