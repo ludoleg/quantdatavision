@@ -1,5 +1,5 @@
 import logging
-import QXRDconductor
+import Conductor
 from google.appengine.ext import ndb
 
 import StringIO
@@ -12,7 +12,9 @@ Target = ''
 class SessionData(ndb.Model):
     user = ndb.StringProperty()
     email = ndb.StringProperty()
-    phaselist = ndb.PickleProperty()
+    selected = ndb.PickleProperty()
+    available = ndb.PickleProperty()
+    results = ndb.PickleProperty()
     avatar = ndb.BlobProperty()
     sampleFilename = ndb.StringProperty()
     sampleBlob = ndb.BlobProperty()
@@ -37,6 +39,8 @@ def GenerateChart(obj_key):
     
     phaselistname = 'phaselist.csv'
     phaselist = open(phaselistname, 'r').readlines()
+    selectedPhases = ludo.selected
+    
     DBname = "reduced_difdata.txt"
     difdata = open(DBname, 'r').readlines()
 
@@ -44,15 +48,16 @@ def GenerateChart(obj_key):
     logging.info("Start Quant.phase...")
     
     rv_plot = StringIO.StringIO()
-    twoT, diff = QXRDconductor.openXRD(XRDdata, filename)
-    results, rv_plot = QXRDconductor.Qanalyze(twoT, diff, difdata, phaselist, Lambda, Target)
+    twoT, diff = Conductor.openXRD(XRDdata, filename)
+    results, rv_plot = Conductor.Qanalyze(twoT, diff, difdata, phaselist, selectedPhases, Lambda, Target)
     rv_plot.seek(0)
     image = Image.open(rv_plot)
     width, height = image.size
     # logging.info("w: {} h: {}".format(width, height))
     ludo.avatar = rv_plot.getvalue()
     
-    ludo.phaselist = results
+    # ludo.selected = results
+    ludo.results = results
     ludo.put()
     # logging.debug(ludo)
 
