@@ -5,9 +5,6 @@ from google.appengine.ext import ndb
 import StringIO
 from PIL import Image
 
-Lambda = ''
-Target = ''
-
 # This datastore model keeps track of which users uploaded which photos.
 class SessionData(ndb.Model):
     user = ndb.StringProperty()
@@ -18,6 +15,8 @@ class SessionData(ndb.Model):
     avatar = ndb.BlobProperty()
     sampleFilename = ndb.StringProperty()
     sampleBlob = ndb.BlobProperty()
+    qlambda = ndb.FloatProperty()
+    qtarget = ndb.StringProperty()
     
 def GenerateChart(obj_key):
     ##############################################################################
@@ -29,8 +28,17 @@ def GenerateChart(obj_key):
 
     # Logic with simple file upload
     filename = ludo.sampleFilename
+
+    # Calibration parameters
+    Lambda = ludo.qlambda
+    Target = ludo.qtarget
+
+    if(Lambda > 2.2 or Lambda == 0):
+        Lambda = ''
     
     logging.debug("Filename: {}".format(filename))
+    logging.debug("Target: %s", Target)
+    logging.debug("Lambda: %s", Lambda)
     # Logic to parse correct file
     
     # Logic with simple file upload

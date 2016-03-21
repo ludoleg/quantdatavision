@@ -2,8 +2,6 @@ import webapp2
 from google.appengine.ext import ndb
 from google.appengine.api import users
 
-import cgi
-
 import logging
 import chart
 from chart import SessionData
@@ -13,10 +11,6 @@ import os
 import jinja2
 
 import phaselist
-
-from google.appengine.api import images
-from PIL import Image
-
 import csv
 
 JINJA_ENVIRONMENT = jinja2.Environment(
@@ -57,16 +51,19 @@ class ShowHome(webapp2.RequestHandler):
             logging.debug('User id: %s', user_id)
 
             # Checks for Quant session
-            ludo = SessionData.query(SessionData.user == user_id).get()
+            session = SessionData.query(SessionData.user == user_id).get()
             # If not, create a session
-            if not ludo:
-                ludo = SessionData(user=user_id, email=user.nickname())
-                # Needed populate the phase list - Initialize with all phases
-                ludo.available = phaselist.availablePhases
-                ludo.put()
-                logging.debug(ludo.available)
+            if not session:
+                session = SessionData(user=user_id,
+                                      email=user.nickname(),
+                                      qtarget = "Co",
+                                      qlambda=0,
+                                      available = phaselist.availablePhases,
+                                      selected = phaselist.defaultPhases)
+                session.put()
+                logging.debug(session.available)
                 
-            logging.debug(ludo)
+            logging.debug(session)
                 
             ## Code to render home page
             title = "Welcome to PLQuant"
@@ -111,13 +108,42 @@ class CsvDownloadHandler(webapp2.RequestHandler):
 class setPhase(webapp2.RequestHandler):
     def get(self):
         user_id = users.get_current_user().user_id() 
-        ludo = SessionData.query(SessionData.user == user_id).get()
+        session = SessionData.query(SessionData.user == user_id).get()
         template = JINJA_ENVIRONMENT.get_template('phase.html')
         template_vars = {
-            'availablephaselist': ludo.available,
-            'selectedphaselist': ludo.selected
+            'availablephaselist': session.available,
+            'selectedphaselist': session.selected
         }
         self.response.out.write(template.render(template_vars))
+
+class setCalibration(webapp2.RequestHandler):
+    def get(self):
+        user_id = users.get_current_user().user_id() 
+        session = SessionData.query(SessionData.user == user_id).get()
+        logging.debug("Calibration")
+        logging.debug(session)
+        template = JINJA_ENVIRONMENT.get_template('calibration.html')
+        template_vars = {
+            'lambda': session.qlambda,
+            'target': session.qtarget,
+        }
+        self.response.out.write(template.render(template_vars))
+        
+class handleCalibration(webapp2.RequestHandler):
+    def post(self):
+        logging.debug("handleCalibration")
+        user_id = users.get_current_user().user_id() 
+        session = SessionData.query(SessionData.user == user_id).get()
+        mylambda = self.request.get('lambda')
+        mytarget = self.request.get('target')
+        ludo = float(mylambda)
+        logging.debug('Lambda retrieved: %s', mylambda)
+        logging.debug('Lambda retrieved: %f', ludo)
+        logging.debug('Target retrieved: %s', mytarget)
+        session.qlambda = ludo
+        session.qtarget = self.request.get('target')
+        session.put()
+        self.redirect('/')
 
 class handlePhase(webapp2.RequestHandler):
     def post(self):
@@ -127,10 +153,12 @@ class handlePhase(webapp2.RequestHandler):
         logging.debug('Phaselist selected retrieved: %s', selectedlist)
         logging.debug('Phaselist available retrieved: %s', availlist)
         user_id = users.get_current_user().user_id() 
-        ludo = SessionData.query(SessionData.user == user_id).get()
-        ludo.selected = selectedlist
-        ludo.available = availlist
-        ludo.put()
+        session = SessionData.query(SessionData.user == user_id).get()
+        selectedlist.sort()
+        availlist.sort()
+        session.selected = selectedlist
+        session.available = availlist
+        session.put()
         self.redirect('/')
     
 class processFile(webapp2.RequestHandler):
@@ -184,9 +212,10 @@ app = webapp2.WSGIApplication([
     ('/csv',CsvDownloadHandler),
     ('/img', renderImage),
     ('/phase', setPhase),
-    ('/calibration', setPhase),
+    ('/calibration', setCalibration),
     ('/process', processFile),
     ('/savePhase', handlePhase),
+    ('/saveCal', handleCalibration),
     ('/upload_form', FileUploadFormHandler ),
     ('/', ShowHome),
 ], debug=True)
