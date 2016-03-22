@@ -1,9 +1,8 @@
 {% extends "base.html" %}
 {% block content %}
-<!-- Main jumbotron for a primary marketing message or call to action -->
-<div class="jumbotron">
-  <h1>XRD Quantitative Analysis</h1>
-  <p>This app executes automatic computation of mineral abundances from X-ray diffraction data using a full pattern fitting method.<br>Upload your XRD pattern and see the distribution and the list of minerals.<br> Results can be downloaded in the form of a CSV file.</p>
+<div class="container">
+  <a class="" href="/upload_form" role="button">
+    <img src="/assets/emptygraph.png" class="img-responsive">
+  </a>
 </div>
-<a class="btn btn-lg btn-primary" href="/upload_form" role="button">Load Sample</a>
 {% endblock %}

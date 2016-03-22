@@ -105,6 +105,13 @@ class CsvDownloadHandler(webapp2.RequestHandler):
     writer.writerow(['Mineral','Mass %'])
     writer.writerows(user.phaselist)
 
+
+class aboutPage(webapp2.RequestHandler):
+    def get(self):
+        template = JINJA_ENVIRONMENT.get_template('about.html')
+        template_vars = {}
+        self.response.out.write(template.render(template_vars))
+    
 class setPhase(webapp2.RequestHandler):
     def get(self):
         user_id = users.get_current_user().user_id() 
@@ -212,6 +219,7 @@ app = webapp2.WSGIApplication([
     ('/csv',CsvDownloadHandler),
     ('/img', renderImage),
     ('/phase', setPhase),
+    ('/about', aboutPage),
     ('/calibration', setCalibration),
     ('/process', processFile),
     ('/savePhase', handlePhase),
