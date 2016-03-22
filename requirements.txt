@@ -1,0 +1,2 @@
+Pillow
+jinja2

@@ -8,10 +8,10 @@ manual_scaling:
 
 handlers:
 - url: /stylesheets
-  static_dir: stylesheets
+  static_dir: static/stylesheets
 
-- url: /assets
-  static_dir: templates/assets
+- url: /img
+  static_dir: static/img
 
 - url: /phaselist.json
   static_files: phaselist.json
@@ -22,6 +22,8 @@ handlers:
   script: quantdatavision.app
   login: required
 
-- url: /(.*\.(gif|png|jpg))$
-  static_files: static/\1
-  upload: static/.*\.(gif|png|jpg)$
+skip_files:
+- ^(.*/)?.*~$
+- ^(.*/)?.*\.py[co]$
+- ^(.*/)?.*desktop/.*$
+
