@@ -3,12 +3,14 @@ from google.appengine.ext import ndb
 from google.appengine.api import users
 
 import logging
-import chart
-from chart import SessionData
 import StringIO
 
 import os
 import jinja2
+
+# Applications modules
+import chart
+from chart import SessionData
 
 import phaselist
 import csv
@@ -42,52 +44,11 @@ class renderImage(webapp2.RequestHandler):
 class ShowHome(webapp2.RequestHandler):
     def get(self):
         logging.debug('Starting ShowHome')
-
-        # Checks for active Google account session
-        user = users.get_current_user()
-        if user:
-            logging.debug('User found, object instance: %s', user)
-            user_id = users.get_current_user().user_id()
-            logging.debug('User id: %s', user_id)
-
-            # Checks for Quant session
-            session = SessionData.query(SessionData.user == user_id).get()
-            # If not, create a session
-            if not session:
-                session = SessionData(user=user_id,
-                                      email=user.nickname(),
-                                      qtarget = "Co",
-                                      qlambda=0,
-                                      available = phaselist.availablePhases,
-                                      selected = phaselist.defaultPhases)
-                session.put()
-                # logging.debug(session.available)
-                
-            # logging.debug(session)
-                
-            ## Code to render home page
-            title = "Welcome to PLQuant"
-            template = JINJA_ENVIRONMENT.get_template('index.html')
-            template_vars = {
-                'title': title,
-                'user': user
-            }
-            self.response.out.write(template.render(template_vars))
-            #self.response.headers['Content-Type'] = 'text/html; charset=utf-8'
-            #self.response.write('Hello, ' + user.nickname())
-        else:
-            logging.debug("No user -> need login")
-            self.redirect(users.create_login_url(self.request.uri))
-
-# [START data_view_handler]
-class ViewDataHandler(webapp2.RequestHandler):
-    def get(self):
-        user=users.get_current_user()
-        logging.debug('User: %s', user)
-        obj = SessionData.query(SessionData.user == user).get()
-        template = JINJA_ENVIRONMENT.get_template('data.html')
+        ## Code to render home page
+        title = "XRD Qanalyze"
+        template = JINJA_ENVIRONMENT.get_template('index.html')
         template_vars = {
-            'phaselist': obj.phaselist
+            'title': title,
         }
         self.response.out.write(template.render(template_vars))
 
@@ -114,27 +75,56 @@ class aboutPage(webapp2.RequestHandler):
     
 class setPhase(webapp2.RequestHandler):
     def get(self):
-        user_id = users.get_current_user().user_id() 
-        session = SessionData.query(SessionData.user == user_id).get()
-        template = JINJA_ENVIRONMENT.get_template('phase.html')
-        template_vars = {
-            'availablephaselist': session.available,
-            'selectedphaselist': session.selected
-        }
-        self.response.out.write(template.render(template_vars))
+        user = users.get_current_user()
+        if user:
+            user_id = users.get_current_user().user_id() 
+            session = SessionData.query(SessionData.user == user_id).get()
+            # Checks for Quant session
+            # If not, init a session
+            if not session:
+                session = SessionData(user=user_id,
+                                      email=user.nickname(),
+                                      qtarget = "Co",
+                                      qlambda=0,
+                                      available = phaselist.availablePhases,
+                                      selected = phaselist.defaultPhases)
+                session.put()
+            template = JINJA_ENVIRONMENT.get_template('phase.html')
+            template_vars = {
+                'availablephaselist': session.available,
+                'selectedphaselist': session.selected
+            }
+            self.response.out.write(template.render(template_vars))
+        else:
+            logging.info("No user -> need login")
+            self.redirect(users.create_login_url(self.request.uri))
 
 class setCalibration(webapp2.RequestHandler):
     def get(self):
-        user_id = users.get_current_user().user_id() 
-        session = SessionData.query(SessionData.user == user_id).get()
         logging.debug("Calibration")
-        # logging.debug(session)
-        template = JINJA_ENVIRONMENT.get_template('calibration.html')
-        template_vars = {
-            'lambda': session.qlambda,
-            'target': session.qtarget,
-        }
-        self.response.out.write(template.render(template_vars))
+        user = users.get_current_user()
+        if user:
+            user_id = users.get_current_user().user_id() 
+            session = SessionData.query(SessionData.user == user_id).get()
+
+            if not session:
+                session = SessionData(user=user_id,
+                                      email=user.nickname(),
+                                      qtarget = "Co",
+                                      qlambda=0,
+                                      available = phaselist.availablePhases,
+                                      selected = phaselist.defaultPhases)
+                session.put()
+            # logging.debug(session)
+            template = JINJA_ENVIRONMENT.get_template('calibration.html')
+            template_vars = {
+                'lambda': session.qlambda,
+                'target': session.qtarget,
+            }
+            self.response.out.write(template.render(template_vars))
+        else:
+            logging.info("No user -> need login")
+            self.redirect(users.create_login_url(self.request.uri))
         
 class handleCalibration(webapp2.RequestHandler):
     def post(self):
@@ -202,28 +192,56 @@ class processFile(webapp2.RequestHandler):
         }
         self.response.out.write(template.render(template_vars))
 
-# [START download_handler]
 class FileUploadFormHandler(webapp2.RequestHandler):
     def get(self):
-        template = JINJA_ENVIRONMENT.get_template('upload.html')
-        template_vars = {
-            'upload_form_url': '/process'
-        }
-        self.response.out.write(template.render(template_vars))
-    
-## Here is the WSGI application instance that routes requests
-logging.getLogger().setLevel(logging.DEBUG)
+        # Checks for active Google account session for app auth
+        user = users.get_current_user()
+        if user:
+            logging.debug('User found, object instance: %s', user)
+            user_id = users.get_current_user().user_id()
+            logging.debug('User id: %s', user_id)
 
+            # Checks for Quant session
+            session = SessionData.query(SessionData.user == user_id).get()
+            # If not, init a session
+            if not session:
+                session = SessionData(user=user_id,
+                                      email=user.nickname(),
+                                      qtarget = "Co",
+                                      qlambda=0,
+                                      available = phaselist.availablePhases,
+                                      selected = phaselist.defaultPhases)
+                session.put()
+                # logging.debug(session.available)
+            # logging.debug(session)
+            ## Code to render home page
+            template = JINJA_ENVIRONMENT.get_template('upload.html')
+            template_vars = {
+                'upload_form_url': '/process'
+            }
+            self.response.out.write(template.render(template_vars))
+        else:
+            logging.debug("No user -> need login")
+            self.redirect(users.create_login_url(self.request.uri))
+        
+class leave(webapp2.RequestHandler):
+    def get(self):
+        self.redirect(users.create_logout_url('/'))
+        
+logging.getLogger().setLevel(logging.DEBUG)
+        
+## Here is the WSGI application instance that routes requests
 app = webapp2.WSGIApplication([
-    ('/csv',CsvDownloadHandler),
-    ('/img', renderImage),
     ('/phase', setPhase),
-    ('/about', aboutPage),
     ('/calibration', setCalibration),
-    ('/process', processFile),
     ('/savePhase', handlePhase),
     ('/saveCal', handleCalibration),
+    ('/about', aboutPage),
+    ('/csv',CsvDownloadHandler),
+    ('/img', renderImage),
+    ('/process', processFile),
     ('/upload_form', FileUploadFormHandler ),
+    ('/leave', leave ),
     ('/', ShowHome),
 ], debug=True)
 

@@ -49,19 +49,19 @@
     </div>
 </form>
 <script>
-var $select = $("#rightValues");
+<!-- var $select = $("#rightValues"); -->
 
-if($select == null)
-{
-$.getJSON("/phaselist.json", function(data){
-	$select.html('');
-	var listitems;
-	$.each(data, function(key, value){
-		listitems += '<option value=' + key + '>' + key + '</option>';
-	});
-	$select.append(listitems);
-});
-}
+<!-- if($select == null) -->
+<!-- { -->
+<!-- $.getJSON("/phaselist.json", function(data){ -->
+<!-- 	$select.html(''); -->
+<!-- 	var listitems; -->
+<!-- 	$.each(data, function(key, value){ -->
+<!-- 		listitems += '<option value=' + key + '>' + key + '</option>'; -->
+<!-- 	}); -->
+<!-- 	$select.append(listitems); -->
+<!-- }); -->
+<!-- } -->
 
 $("#btnLeft").click(function () {
     var selectedItem = $("#rightValues option:selected");

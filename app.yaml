@@ -4,7 +4,7 @@ threadsafe: true
 vm: true
 
 manual_scaling:
-  instances: 1
+  instances: 2
 
 handlers:
 - url: /stylesheets
@@ -12,11 +12,6 @@ handlers:
 
 - url: /img
   static_dir: static/img
-
-- url: /phaselist.json
-  static_files: phaselist.json
-  upload: phaselist.json
-  application_readable: true
 
 - url: /.*
   script: quantdatavision.app
