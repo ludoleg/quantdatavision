@@ -28,8 +28,8 @@ def dynamic_png(key):
 # [START image_handler]
 class renderImage(webapp2.RequestHandler):
     def get(self):
-        ludo_key = ndb.Key(urlsafe=self.request.get('img_id'))
-        ludo = ludo_key.get()
+        obj_key = ndb.Key(urlsafe=self.request.get('img_id'))
+        ludo = obj_key.get()
         user_id = users.get_current_user().user_id()
         ludo = SessionData.query(SessionData.user == user_id).get()
         if ludo.avatar:
@@ -61,9 +61,9 @@ class ShowHome(webapp2.RequestHandler):
                                       available = phaselist.availablePhases,
                                       selected = phaselist.defaultPhases)
                 session.put()
-                logging.debug(session.available)
+                # logging.debug(session.available)
                 
-            logging.debug(session)
+            # logging.debug(session)
                 
             ## Code to render home page
             title = "Welcome to PLQuant"
@@ -128,7 +128,7 @@ class setCalibration(webapp2.RequestHandler):
         user_id = users.get_current_user().user_id() 
         session = SessionData.query(SessionData.user == user_id).get()
         logging.debug("Calibration")
-        logging.debug(session)
+        # logging.debug(session)
         template = JINJA_ENVIRONMENT.get_template('calibration.html')
         template_vars = {
             'lambda': session.qlambda,
@@ -158,7 +158,7 @@ class handlePhase(webapp2.RequestHandler):
         selectedlist = self.request.get_all('selectedphase')
         availlist = self.request.get_all('availablephase')
         logging.debug('Phaselist selected retrieved: %s', selectedlist)
-        logging.debug('Phaselist available retrieved: %s', availlist)
+        # logging.debug('Phaselist available retrieved: %s', availlist)
         user_id = users.get_current_user().user_id() 
         session = SessionData.query(SessionData.user == user_id).get()
         selectedlist.sort()
@@ -200,7 +200,6 @@ class processFile(webapp2.RequestHandler):
             'key': user_data_key.urlsafe(),
             'samplename': ludo.sampleFilename
         }
-        logging.debug("Do I get here?")
         self.response.out.write(template.render(template_vars))
 
 # [START download_handler]
