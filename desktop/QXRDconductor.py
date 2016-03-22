@@ -61,6 +61,7 @@ def setQthresh(RIR):
     return Thresh
 
 def overplotgraph(angle,diff,BGpoly,Sum, graphlist):
+    plt.close("all")
     fig = plt.figure(figsize=(15,5)) 
     plt.plot(angle, diff, linestyle="none",  marker=".",  color="black")
     fig.patch.set_facecolor('white')
@@ -97,11 +98,12 @@ def overplotgraph(angle,diff,BGpoly,Sum, graphlist):
 
     plt.show
     
-    ludo_rv = StringIO.StringIO()
-    plt.savefig(ludo_rv, format="png")
-    plt.clf()
+    # ludo_rv = StringIO.StringIO()
+    # plt.savefig(ludo_rv, format="png")
+    # plt.clf()
 
-    return ludo_rv
+    # return ludo_rv
+    return 1
 
 def Qanalyze(angle, diff, difdata, phaselist, Lambda, Target):
     """

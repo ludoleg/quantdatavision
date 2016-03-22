@@ -12,11 +12,11 @@ import os
 #from tkFileDialog import askopenfilename
 
 
-datafilepath='/Users/ludo/Documents/workspace/autoquantplayground/XRD_data/'
+datafilepath='/Users/Ludo/Documents/workspace/XRD_data/'
 datafilename = "Mix3B-film.txt"
 DBfilepath=''
-DBname="reduced_difdata.txt"
-phaselistname = 'phaselist.csv'
+DBname="../reduced_difdata.txt"
+phaselistname = '../phaselist.csv'
 Lambda = ''
 Target = ''
 
