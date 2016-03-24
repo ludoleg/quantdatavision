@@ -163,9 +163,10 @@ def Qanalyze(angle, diff, difdata, phaselist, selectedphases, Lambda, Target):
     DBInt = DB[:,:,1]
     
     Thresh = setQthresh(RIR)    
-
+    
+    # disabled optimize step
     initialize = True
-    optimize = True
+    optimize = False #True
     
     
     if initialize:
