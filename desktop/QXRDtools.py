@@ -50,13 +50,13 @@ def openXRD(filename):
         # bellow reads last line which can contain less than 8 entries
         lastline = dif[len(dif)-1]
         lastline = lastline.split()
-        print lastline
+        #print lastline
         for i in range(0,len(lastline)):
              diffindex = ((len(dif)-3)*8)+i
              diff[diffindex]=float(lastline[i])
-    else:     
+    '''else:     
         print "file format error: plv, txt, dif, mdi required."
-        
+    '''    
     return angle, diff #, target, Lambda  needs to be coded in txt and plv
 
 #############################################################################################
@@ -124,28 +124,8 @@ def scalepattern(X, Yexp, DB2T, DBInt, RIR, a, b, OStarget):
             ontarget = True
     
     return I
-'''
-    
-def scalepattern(X, Yexp, DB2T, DBInt, RIR, a, b, OStarget):
-    """
-    #   used to initialize a mineral intensity
-    #  fater computation then previous, uses ratio of patterns instead of itterative process
-    """
-    tol = .5
-    I = 1.
-    if RIR > 0:
-        Yg = np.zeros_like(X)
-        for i in range(0, len(DB2T)):
-            S = a * DB2T[i] + b
-            Yg += (DBInt[i]*RIR/S/sqrt(2*pi)) * e**(-(X-DB2T[i])**2/2/S**2)
 
-        patternration = Yexp / Yg
-        
-        for i in range(0, len(DB2T)):
-            
-    
-    return I
-'''    
+       
     
 def BGfit(angle, diff, BGsmoothing, w, w2, Polyorder):
     ####################   fits background   ###########################
@@ -200,7 +180,7 @@ def getLambdafromTarget(Target):
         Lambda = 1.541838
     elif Target == 'Co':
         Lambda = 1.78897
-    else : print 'ERROR: Tube target material unknown'
+    #else : print 'ERROR: Tube target material unknown'
     return Lambda
 
 
@@ -314,6 +294,14 @@ def getIinit(angle,diff,BGpoly,DB2T, DBInt, mineral, RIR, enable, INIsmoothing, 
             Iinit[i] = 0
     return Iinit
 
+def Ithresholding(mineral, enable,RIR, Ithreshratio, I):
+    ####  turns minerals OFF (enable =0) if under their threshold%   ##############
+    
+    for i in range(0, len(enable)):        
+        if enable[i]<>0 and  I[i] < max(I)*Ithreshratio:
+            enable[i] = 0
+            #print mineral[i], "- init : %.4f >>> eliminated\t" %I[i]  
+    return enable
 
 
 def Qthresholding(mineral, enable, Thresh, I):
@@ -429,7 +417,7 @@ def residual(I, X, Yexp, param):
     #  variable to refine:  I = intensity factors list  
     #  param as definded in makeparam function
     """
-
+    I = abs(I)
     Yg = gausspat(I,X,param)
     if param[2] > 0:  #this line adds a refined constant background
         Yg = Yg + I[len(I)-1]
@@ -446,28 +434,38 @@ def Qrefinelstsq(angle,diff,BGpoly,DB2T, DBInt, mineral, RIR, enable, Thresh, Ii
     """
     Keep_refining = True
     counter = 0 # counts iteration of the refinement.
-    I = Iinit
+    I = abs(np.array(Iinit))
     precision=[0.1, 0.01, 0.01]
-    
+
     while Keep_refining:
         ## recalculate DB with current list
         counter +=1
-        print "counter = ", counter
+        #print "counter = ", counter, '     minerals:', sum(enable)
         param = makeparam(mineral, RIR, enable, DB2T, DBInt, a, b, addBG)
         Keep_refining = False
-        Istart=I
+        Istart = I
         if addBG<>0:
             Istart.append(addBG)
             param[2]=1
             
         I, tossme = leastsq(residual, Istart, args=(angle, diff-BGpoly, param),  gtol=precision[counter-1])#, col_deriv=1, maxfev=100)
+        I=abs(I)        
         logging.info( "end LSTSQ #",  counter)
-        
+        #print "I result:", I
+        # enable2 allows reducing the number of phases taken into account in the computation.
         enable2 = Qthresholding(mineral, enable, Thresh, I)
+        I *= enable2
+        
         if sum(enable2) < sum(enable):
             Keep_refining = True
             enable = enable2
+        
         if counter < 3:
             Keep_refining = True
+        '''if counter == 3:
+            print "Step 3 results: "            
+            for i in range (0, len(mineral)):
+                    print mineral[i], "=",I[i]
+        '''
         
     return I

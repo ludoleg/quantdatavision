@@ -133,9 +133,9 @@ def Qanalyze(angle, diff, difdata, phaselist, selectedphases, Lambda, Target):
 
     logging.debug("Start Qanalyze")
     
-    if Lambda == '' and Target in ["Co", "Cu"]:
+    if Lambda in ('',0) and Target in ["Co", "Cu"]:
         Lambda = getLambdafromTarget(Target)
-    if Lambda =='' and Target == '':
+    if Lambda in ('',0) and Target == '':
         Target = "Co"
         Lambda = getLambdafromTarget(Target)
         logging.info('No Lambda or Target data:  assumed to be Co Ka')
@@ -169,18 +169,32 @@ def Qanalyze(angle, diff, difdata, phaselist, selectedphases, Lambda, Target):
     
     
     if initialize:
-        
+        #print "number of mineral before initialization: ",sum(enable)
         logging.info("Start Initialization")
         Iinit = getIinit(angle,diff,BGpoly,DB2T, DBInt, mineral, RIR, enable, INIsmoothing, OStarget, a, b)
+        '''for i in range (0, len(mineral)):
+            if enable[i]>0:
+                print mineral[i], "=", Iinit[i]
+        '''
+        Ithresh = 0.05        
+        enable = Ithresholding(mineral, enable,RIR, Ithresh, Iinit)
+        while sum(enable) > 25:
+            Ithresh += 0.01
+            enable = Ithresholding(mineral, enable,RIR, Ithresh, Iinit)
+            #print "Ithresh = ", Ithresh, "   minerals: ", sum(enable)
+                    
+        
         logging.info("Done computing Initialization")
        
-        #####     remove minerals dsiabled by initializaation       ################     
+        #####     remove minerals disabled by initialization       ################     
         mineral, RIR, enable, Thresh, Iinit = CleanMineralList (mineral, RIR, enable, Thresh, Iinit)
         ####    #redo DB with shorter list    #####
         DB, RIRcalc, peakcount = makeDB(difdata, mineral, enable, Lambda)
         DB2T = DB[:,:,0]
         DBInt = DB[:,:,1]
-    
+        #print "number of mineral after initialization: ", sum(enable)
+
+        
     else:
         Iinit = np.array(([1.] * len(enable)))* np.array(enable)
     
@@ -190,11 +204,14 @@ def Qanalyze(angle, diff, difdata, phaselist, selectedphases, Lambda, Target):
     Sum_init *= max(diff-BGpoly)/max(Sum_init)
     Sum_init += BGpoly
     Qinit = Iinit/sum(Iinit)*100
-
+    '''
+    for i in range (0, len(mineral)):
+        print mineral[i], "=", Qinit[i]
+    '''
     for i in range(0,len(mineral)):
         logging.info("Qinit_%s : %.2f " %(mineral[i], Qinit[i]))
     
-
+    #print "Phases enabled before optimize = ", sum(enable)
     if optimize:
         
         logging.info("Start computing optimization")
@@ -204,7 +221,7 @@ def Qanalyze(angle, diff, difdata, phaselist, selectedphases, Lambda, Target):
         logging.info("Done computing optimization- starting drawing")
     else:
         I = Iinit
-    
+    #print "Phases enabled = ", sum(enable)
     logging.debug("Done phaseanalyze")
     #####  reorganize results by decreasing % order #########
     mineral, RIR, enable, Thresh, I = CleanMineralList(mineral, RIR, enable, Thresh, I)
@@ -218,6 +235,10 @@ def Qanalyze(angle, diff, difdata, phaselist, selectedphases, Lambda, Target):
     Sum= gausspat(I, angle, param)
     Sum *= max(diff-BGpoly)/max(Sum)
     Sum += BGpoly
+    '''
+    for i in range (0, len(mineral)):
+        print mineral[i], "=", I[i]
+    '''
     Q = I/sum(I)*100
 
     logging.debug(mineral)
@@ -227,7 +248,7 @@ def Qanalyze(angle, diff, difdata, phaselist, selectedphases, Lambda, Target):
     
     results = []    
     for i in range(0, len(mineral)):
-        results.append([mineral[i], Q[i]])    
+        results.append([mineral[i], '%.2f' %Q[i]])
     
     plot = overplotgraph(angle,diff,BGpoly,Sum, results[0:min(10,len(mineral))])
     return results, plot
