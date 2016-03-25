@@ -228,7 +228,7 @@ class leave(webapp2.RequestHandler):
     def get(self):
         self.redirect(users.create_logout_url('/'))
         
-logging.getLogger().setLevel(logging.DEBUG)
+# logging.getLogger().setLevel(logging.DEBUG)
         
 ## Here is the WSGI application instance that routes requests
 app = webapp2.WSGIApplication([
