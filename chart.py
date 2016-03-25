@@ -17,6 +17,8 @@ class SessionData(ndb.Model):
     sampleBlob = ndb.BlobProperty()
     qlambda = ndb.FloatProperty()
     qtarget = ndb.StringProperty()
+    a = ndb.FloatProperty()
+    b = ndb.FloatProperty()
     
 def GenerateChart(obj_key):
     ##############################################################################

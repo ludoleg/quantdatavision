@@ -6,6 +6,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 from QXRDtools import *
+from math import sqrt
 from math import *
 import StringIO
 

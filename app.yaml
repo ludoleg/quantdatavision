@@ -6,6 +6,9 @@ vm: true
 manual_scaling:
   instances: 2
 
+resources:
+  cpu: 2
+
 handlers:
 - url: /stylesheets
   static_dir: static/stylesheets
@@ -20,4 +23,3 @@ skip_files:
 - ^(.*/)?.*~$
 - ^(.*/)?.*\.py[co]$
 - ^(.*/)?.*desktop/.*$
-
