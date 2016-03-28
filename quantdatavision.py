@@ -114,7 +114,6 @@ class setCalibration(webapp2.RequestHandler):
         if user:
             user_id = users.get_current_user().user_id() 
             session = SessionData.query(SessionData.user == user_id).get()
-
             if not session:
                 a = -0.001348 / (2*sqrt(2*log(2)))
                 b =  0.352021 / (2*sqrt(2*log(2)))
@@ -148,12 +147,19 @@ class handleCalibration(webapp2.RequestHandler):
         session = SessionData.query(SessionData.user == user_id).get()
         mylambda = self.request.get('lambda')
         mytarget = self.request.get('target')
-        ludo = float(mylambda)
+        a = self.request.get('fwhma')
+        b = self.request.get('fwhmb')
+
         logging.debug('Lambda retrieved: %s', mylambda)
-        logging.debug('Lambda retrieved: %f', ludo)
         logging.debug('Target retrieved: %s', mytarget)
-        session.qlambda = ludo
+
         session.qtarget = self.request.get('target')
+        if mylambda:
+            session.qlambda = float(mylambda)
+        if a:
+            session.fwhma = float(a)
+        if b:
+            session.fwhmb = float(b)
         session.put()
         self.redirect('/')
 
