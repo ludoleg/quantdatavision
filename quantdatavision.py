@@ -85,8 +85,8 @@ class setPhase(webapp2.RequestHandler):
             # Checks for Quant session
             # If not, init a session
             if not session:
-                a = -0.001348 / (2*sqrt(2*log(2)))
-                b =  0.352021 / (2*sqrt(2*log(2)))
+                a = -0.001348 
+                b =  0.352021 
                 session = SessionData(user=user_id,
                                       email=user.nickname(),
                                       qtarget = "Co",
@@ -115,8 +115,8 @@ class setCalibration(webapp2.RequestHandler):
             user_id = users.get_current_user().user_id() 
             session = SessionData.query(SessionData.user == user_id).get()
             if not session:
-                a = -0.001348 / (2*sqrt(2*log(2)))
-                b =  0.352021 / (2*sqrt(2*log(2)))
+                a = -0.001348 
+                b =  0.352021 
                 session = SessionData(user=user_id,
                                       email=user.nickname(),
                                       qtarget = "Co",
