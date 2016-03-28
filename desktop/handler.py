@@ -1,13 +1,7 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Feb 12 11:36:53 2016
-
-@author: philippe
-"""
-
 import conductor
 import numpy as np
 from math import *
+from plottool import *
 import os
 import time
 from Tkinter import *
@@ -25,7 +19,7 @@ Target = ''
 FWHMa = -0.001348 / (2*sqrt(2*log(2)))
 FWHMb =  0.352021 / (2*sqrt(2*log(2)))
 
-#datafilepath, datafilename = os.path.split(askopenfilename(filetypes=[("TXT files","*.txt")], title="Open XRD .txt file"))
+# datafilepath, datafilename = os.path.split(askopenfilename(filetypes=[("TXT files","*.txt")], title="Open XRD .txt file"))
 
 Tk().withdraw()
 t0=time.time()
@@ -38,8 +32,9 @@ selectedphases = ['Actinolite','Albite','Almandine','Andalusite','Andesine','Anh
 #print "number of phase: ", len(selectedphases)
 
 twoT, diff = conductor.openXRD(os.path.join(datafilepath, datafilename))
-results, plot = conductor.Qanalyze(twoT, diff ,difdata, phaselist, selectedphases, Lambda, Target, FWHMa, FWHMb)
+results, BG, calcdiff = conductor.Qanalyze(twoT, diff ,difdata, phaselist, selectedphases, Lambda, Target, FWHMa, FWHMb)
 
+plot = overplotgraph(twoT,diff,BG,calcdiff, results[0:min(10,len(results))])
 
 #print plot, results
 

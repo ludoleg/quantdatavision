@@ -1,11 +1,11 @@
 import logging
-import conductor
 from google.appengine.ext import ndb
-
 import StringIO
 from PIL import Image
 
-# This datastore model keeps track of which users uploaded which photos.
+import conductor
+from graphit import *
+
 class SessionData(ndb.Model):
     user = ndb.StringProperty()
     email = ndb.StringProperty()
@@ -25,17 +25,17 @@ def GenerateChart(obj_key):
     ############   Program parameters   ##########################################
     ##############################################################################
     logging.info("Start with processing...")
-    ludo = obj_key.get()
-    # logging.debug(ludo)
+    session = obj_key.get()
+    # logging.debug(session)
 
     # Logic with simple file upload
-    filename = ludo.sampleFilename
+    filename = session.sampleFilename
 
     # Calibration parameters
-    Lambda = ludo.qlambda
-    Target = ludo.qtarget
-    FWHMa = ludo.fwhma
-    FWHMb = ludo.fwhmb
+    Lambda = session.qlambda
+    Target = session.qtarget
+    FWHMa = session.fwhma
+    FWHMb = session.fwhmb
     
     if(Lambda > 2.2 or Lambda == 0):
         Lambda = ''
@@ -46,12 +46,12 @@ def GenerateChart(obj_key):
     # Logic to parse correct file
     
     # Logic with simple file upload
-    XRDdata = StringIO.StringIO(ludo.sampleBlob)
+    XRDdata = StringIO.StringIO(session.sampleBlob)
     logging.debug(XRDdata)
     
     phaselistname = 'phaselist.csv'
     phaselist = open(phaselistname, 'r').readlines()
-    selectedPhases = ludo.selected
+    selectedPhases = session.selected
     
     DBname = "reduced_difdata.txt"
     difdata = open(DBname, 'r').readlines()
@@ -61,17 +61,20 @@ def GenerateChart(obj_key):
     
     rv_plot = StringIO.StringIO()
     twoT, diff = conductor.openXRD(XRDdata, filename)
-    results, rv_plot = conductor.Qanalyze(twoT, diff, difdata, phaselist, selectedPhases, Lambda, Target, FWHMa, FWHMb)
+
+    results, BG, calcdiff =      conductor.Qanalyze(twoT, diff ,difdata, phaselist, selectedPhases, Lambda, Target, FWHMa, FWHMb)
+    rv_plot = overplotgraph(twoT,diff,BG,calcdiff, results[0:min(10,len(results))])
+    
     rv_plot.seek(0)
     image = Image.open(rv_plot)
     width, height = image.size
     # logging.info("w: {} h: {}".format(width, height))
-    ludo.avatar = rv_plot.getvalue()
+    session.avatar = rv_plot.getvalue()
     
-    # ludo.selected = results
-    ludo.results = results
-    ludo.put()
-    # logging.debug(ludo)
+    # session.selected = results
+    session.results = results
+    session.put()
+    # logging.debug(session)
 
     logging.debug(results)
     logging.info("Done with processing")
@@ -83,4 +86,4 @@ def GenerateChart(obj_key):
     # cimage = io.BytesIO()
     # image.save(cimage,'png')
     # cimage.seek(0)  # rewind to the start
-    # ludo.avatar = cimage.getvalue()
+    # session.avatar = cimage.getvalue()
