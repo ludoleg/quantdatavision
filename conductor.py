@@ -4,10 +4,7 @@ import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-
-from QXRDtools import *
-from math import sqrt
-from math import *
+from qxrdtools import *
 import StringIO
 
 
@@ -44,15 +41,12 @@ def Setparameters():
     Polyorder = 4
     addBG = 0  # enter 0 to disable
     
-    # broadening function parameters a.x+b
-    a = -0.001348 / (2*sqrt(2*log(2)))
-    b = 0.352021 / (2*sqrt(2*log(2)))
    
     # Initialization
     INIsmoothing = False
     OStarget = 0.01
-    Target = "Co"
-    return(BGsmoothing,w,w2,Polyorder,addBG,INIsmoothing,OStarget,a,b,Target)
+
+    return(BGsmoothing,w,w2,Polyorder,addBG,INIsmoothing,OStarget)
 
 
 def activatephases(mineral, enable, selectedphases):
@@ -125,7 +119,7 @@ def overplotgraph(angle,diff,BGpoly,Sum, graphlist):
 
     return ludo_rv
 
-def Qanalyze(angle, diff, difdata, phaselist, selectedphases, Lambda, Target):
+def Qanalyze(angle, diff, difdata, phaselist, selectedphases, Lambda, Target, a, b):
     """
     This function orchestrates the quantitative analysis
     All critical functions are imported from QRDtools
@@ -143,7 +137,7 @@ def Qanalyze(angle, diff, difdata, phaselist, selectedphases, Lambda, Target):
     
     #########    Process Background     #######################################
     
-    BGsmoothing,w,w2,Polyorder,addBG,INIsmoothing,OStarget,a,b,Target = Setparameters()
+    BGsmoothing,w,w2,Polyorder,addBG,INIsmoothing,OStarget = Setparameters()
 
     BGpoly = BGfit(angle, diff, BGsmoothing, w, w2, Polyorder)
 
@@ -164,7 +158,7 @@ def Qanalyze(angle, diff, difdata, phaselist, selectedphases, Lambda, Target):
     DBInt = DB[:,:,1]
     
     Thresh = setQthresh(RIR)    
-    
+
     initialize = True
     optimize = True
     

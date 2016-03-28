@@ -1,5 +1,5 @@
 import logging
-import Conductor
+import conductor
 from google.appengine.ext import ndb
 
 import StringIO
@@ -17,8 +17,8 @@ class SessionData(ndb.Model):
     sampleBlob = ndb.BlobProperty()
     qlambda = ndb.FloatProperty()
     qtarget = ndb.StringProperty()
-    a = ndb.FloatProperty()
-    b = ndb.FloatProperty()
+    fwhma = ndb.FloatProperty()
+    fwhmb = ndb.FloatProperty()
     
 def GenerateChart(obj_key):
     ##############################################################################
@@ -34,7 +34,9 @@ def GenerateChart(obj_key):
     # Calibration parameters
     Lambda = ludo.qlambda
     Target = ludo.qtarget
-
+    FWHMa = ludo.fwhma
+    FWHMb = ludo.fwhmb
+    
     if(Lambda > 2.2 or Lambda == 0):
         Lambda = ''
     
@@ -58,8 +60,8 @@ def GenerateChart(obj_key):
     logging.info("Start Quant.phase...")
     
     rv_plot = StringIO.StringIO()
-    twoT, diff = Conductor.openXRD(XRDdata, filename)
-    results, rv_plot = Conductor.Qanalyze(twoT, diff, difdata, phaselist, selectedPhases, Lambda, Target)
+    twoT, diff = conductor.openXRD(XRDdata, filename)
+    results, rv_plot = conductor.Qanalyze(twoT, diff, difdata, phaselist, selectedPhases, Lambda, Target, FWHMa, FWHMb)
     rv_plot.seek(0)
     image = Image.open(rv_plot)
     width, height = image.size

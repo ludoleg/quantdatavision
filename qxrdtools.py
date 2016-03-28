@@ -3,8 +3,9 @@ import numpy as np
 from math import *
 import logging
 
-# this file includes tools for computing stuff
-
+"""
+Utilities file for XRD
+"""
 
 def openXRD(blob, nomdufichier):
     """
