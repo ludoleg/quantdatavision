@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Feb 12 11:36:53 2016
+
+@author: philippe
+"""
+
 import conductor
 import numpy as np
 from math import *
@@ -9,17 +16,17 @@ from tkFileDialog import askopenfilename
 
 
 
-datafilepath='XRD_data'
-datafilename = "Mix1A-film.txt"
+#datafilepath='/home/philippe/Documents/Projects/Python/Autoquant-Web/XRD_data'
+#datafilename = "Mix3B-film.txt"
 DBfilepath=''
 DBname="../reduced_difdata.txt"
 phaselistname = 'phaselistall.csv'
 Lambda = 0
 Target = ''
-FWHMa = -0.001348 / (2*sqrt(2*log(2)))
-FWHMb =  0.352021 / (2*sqrt(2*log(2)))
+FWHMa = -0.001348
+FWHMb =  0.352021
 
-# datafilepath, datafilename = os.path.split(askopenfilename(filetypes=[("TXT files","*.txt")], title="Open XRD .txt file"))
+datafilepath, datafilename = os.path.split(askopenfilename(filetypes=[("TXT files","*.txt")], title="Open XRD .txt file"))
 
 Tk().withdraw()
 t0=time.time()

@@ -52,7 +52,7 @@ def setQthresh(RIR):
             Thresh[i] = 2
     return Thresh
 
-def Qanalyze(angle, diff, difdata, phaselist, selectedphases, Lambda, Target, a, b):
+def Qanalyze(angle, diff, difdata, phaselist, selectedphases, Lambda, Target, FWHMa, FWHMb):
     """
     This function orchestrates the quantitative analysis
     All critical functions are imported from QRDtools
@@ -68,6 +68,8 @@ def Qanalyze(angle, diff, difdata, phaselist, selectedphases, Lambda, Target, a,
         Lambda = getLambdafromTarget(Target)
         logging.info('No Lambda or Target data:  assumed to be Co Ka')
     
+    sigmaa = FWHMa / (2*sqrt(2*log(2)))
+    sigmab = FWHMb / (2*sqrt(2*log(2)))
     #########    Process Background     #######################################
     
     BGsmoothing,w,w2,Polyorder,addBG,INIsmoothing,OStarget = Setparameters()
@@ -99,7 +101,7 @@ def Qanalyze(angle, diff, difdata, phaselist, selectedphases, Lambda, Target, a,
     if initialize:
         #print "number of mineral before initialization: ",sum(enable)
         logging.info("Start Initialization")
-        Iinit = getIinit(angle,diff,BGpoly,DB2T, DBInt, mineral, RIR, enable, INIsmoothing, OStarget, a, b)
+        Iinit = getIinit(angle,diff,BGpoly,DB2T, DBInt, mineral, RIR, enable, INIsmoothing, OStarget, sigmaa, sigmab)
         '''for i in range (0, len(mineral)):
             if enable[i]>0:
                 print mineral[i], "=", Iinit[i]
@@ -126,7 +128,7 @@ def Qanalyze(angle, diff, difdata, phaselist, selectedphases, Lambda, Target, a,
     else:
         Iinit = np.array(([1.] * len(enable)))* np.array(enable)
     
-    param = makeparam(mineral, RIR, enable, DB2T, DBInt, a, b, False)
+    param = makeparam(mineral, RIR, enable, DB2T, DBInt, sigmaa, sigmab, False)
     
     Sum_init = gausspat(Iinit, angle, param)
     Sum_init *= max(diff-BGpoly)/max(Sum_init)
@@ -144,7 +146,7 @@ def Qanalyze(angle, diff, difdata, phaselist, selectedphases, Lambda, Target, a,
         
         logging.info("Start computing optimization")
         
-        I = Qrefinelstsq(angle, diff, BGpoly, DB2T, DBInt, mineral, RIR, enable, Thresh, Iinit, a, b, Lambda, False)
+        I = Qrefinelstsq(angle, diff, BGpoly, DB2T, DBInt, mineral, RIR, enable, Thresh, Iinit, sigmaa, sigmab, Lambda, False)
         
         logging.info("Done computing optimization- starting drawing")
     else:
@@ -158,7 +160,7 @@ def Qanalyze(angle, diff, difdata, phaselist, selectedphases, Lambda, Target, a,
     DB, RIRcalc, peakcount = makeDB(difdata, mineral, enable, Lambda)
     DB2T = DB[:,:,0]
     DBInt = DB[:,:,1]
-    param = makeparam(mineral, RIR, enable, DB2T, DBInt, a, b, False)
+    param = makeparam(mineral, RIR, enable, DB2T, DBInt, sigmaa, sigmab, False)
     
     Sum= gausspat(I, angle, param)
     Sum *= max(diff-BGpoly)/max(Sum)
