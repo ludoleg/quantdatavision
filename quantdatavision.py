@@ -226,12 +226,17 @@ class FileUploadFormHandler(webapp2.RequestHandler):
             session = SessionData.query(SessionData.user == user_id).get()
             # If not, init a session
             if not session:
+                a = -0.001348 
+                b =  0.352021 
                 session = SessionData(user=user_id,
                                       email=user.nickname(),
                                       qtarget = "Co",
                                       qlambda=0,
                                       available = phaselist.availablePhases,
-                                      selected = phaselist.defaultPhases)
+                                      selected = phaselist.defaultPhases,
+                                      fwhma = a,
+                                      fwhmb = b
+                )
                 session.put()
                 # logging.debug(session.available)
             # logging.debug(session)
