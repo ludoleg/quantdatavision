@@ -9,13 +9,13 @@ import Conductor
 import numpy as np
 import os
 import time
-from Tkinter import *
-from tkFileDialog import askopenfilename
+# from Tkinter import *
+# from tkFileDialog import askopenfilename
 
 
 
-#datafilepath='/home/philippe/Documents/Projects/Python/Autoquant-Web/XRD_data'
-#datafilename = "Mix3B-film.txt"
+datafilepath='XRD_data'
+datafilename = "Mix1A-film.txt"
 DBfilepath=''
 DBname="../reduced_difdata.txt"
 phaselistname = 'phaselistall.csv'
@@ -23,9 +23,9 @@ Lambda = 0
 Target = ''
 
 
-datafilepath, datafilename = os.path.split(askopenfilename(filetypes=[("TXT files","*.txt")], title="Open XRD .txt file"))
+# datafilepath, datafilename = os.path.split(askopenfilename(filetypes=[("TXT files","*.txt")], title="Open XRD .txt file"))
 
-Tk().withdraw()
+# Tk().withdraw()
 t0=time.time()
 difdata = open((os.path.join(DBfilepath, DBname)), 'r').readlines()
 phaselist = open(os.path.join(DBfilepath, phaselistname), 'r').readlines()

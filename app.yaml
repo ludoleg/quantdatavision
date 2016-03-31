@@ -4,10 +4,7 @@ threadsafe: true
 vm: true
 
 manual_scaling:
-  instances: 2
-
-resources:
-  cpu: 2
+  instances: 1
 
 handlers:
 - url: /stylesheets
