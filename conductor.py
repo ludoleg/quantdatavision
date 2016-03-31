@@ -1,35 +1,11 @@
 import logging
 import numpy as np
-
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-
-from QXRDtools import *
-from math import sqrt
-from math import *
-import StringIO
-
+from qxrdtools import *
 
 '''
 code was modified to enable selectedphase list to be used.  QXRDtools remains unchanged.
 
 '''
-# import io
-# from PIL import Image
-
-# Almost entirely generic
-# Provides the logic for generating the plot and the CSV file data
-
-# Input xxx.txt containing phase, angle
-# DB, Phase list static
-# Output Plot, list for CSV file generation
-
-
-
-#if xxx = GAE then
-#else
-
 
 def Setparameters():
     """
@@ -43,16 +19,12 @@ def Setparameters():
     w2 = 4
     Polyorder = 4
     addBG = 0  # enter 0 to disable
-    
-    # broadening function parameters a.x+b
-    a = -0.001348 / (2*sqrt(2*log(2)))
-    b = 0.352021 / (2*sqrt(2*log(2)))
    
     # Initialization
     INIsmoothing = False
     OStarget = 0.01
-    Target = "Co"
-    return(BGsmoothing,w,w2,Polyorder,addBG,INIsmoothing,OStarget,a,b,Target)
+
+    return(BGsmoothing,w,w2,Polyorder,addBG,INIsmoothing,OStarget)
 
 
 def activatephases(mineral, enable, selectedphases):
@@ -80,52 +52,7 @@ def setQthresh(RIR):
             Thresh[i] = 2
     return Thresh
 
-def overplotgraph(angle,diff,BGpoly,Sum, graphlist):
-    fig = plt.figure(figsize=(15,5)) 
-    plt.plot(angle, diff, linestyle="none",  marker=".",  color="black")
-    fig.patch.set_facecolor('white')
-    plt.xlabel('2-theta (deg)')
-    plt.ylabel('intensity')
-    #plt.plot(BGX, BGY, linestyle="none",  marker="o", color="yellow")  #plots data og calculate linear background
-    #plt.plot(angle, Diffmodel, linestyle="solid", color="green")
-    plt.plot(angle, BGpoly, linestyle="solid", color="red")
-    plt.plot(angle, Sum, linestyle="solid", color="green")
-    plt.xlim(5,55)
-    plt.ylim(0,max(diff)*2)
-    
-    offset = max(diff)/2*3
-    difference_magnification = 1
-    difference = (diff - Sum) * difference_magnification
-    offsetline = [offset]*len(angle)
-    plt.plot(angle, difference+offset, linestyle="solid", color="red")
-    plt.plot(angle, offsetline, linestyle="solid", color="pink")
-    
-    FOM = sum(abs(diff-Sum))/len(diff)
-    plt.text(6, offset/10*12, "FOM = %.2f" %(FOM), fontsize=12, color="red")
-    vertpos = offset/10*9
-    for i in range(0,len(graphlist)):
-        plt.text(6, vertpos,"%s :" %graphlist[i][0], fontsize=12, color="blue")
-        plt.text(12, vertpos,"%.1f" %float(graphlist[i][1]), fontsize=12, color="blue")
-        vertpos -= offset/15
-    if len(graphlist) == 10:
-        plt.text(6, vertpos,"...", fontsize=12, color="blue")
-
-    # buf = io.BytesIO()
-    # plt.savefig(buf, format='png')
-    # buf.seek(0)
-    # plot = Image.open(buf)
-    # buf.close()
-    # return plot
-
-    plt.show
-    
-    ludo_rv = StringIO.StringIO()
-    plt.savefig(ludo_rv, format="png")
-    plt.clf()
-
-    return ludo_rv
-
-def Qanalyze(angle, diff, difdata, phaselist, selectedphases, Lambda, Target):
+def Qanalyze(angle, diff, difdata, phaselist, selectedphases, Lambda, Target, FWHMa, FWHMb):
     """
     This function orchestrates the quantitative analysis
     All critical functions are imported from QRDtools
@@ -141,9 +68,11 @@ def Qanalyze(angle, diff, difdata, phaselist, selectedphases, Lambda, Target):
         Lambda = getLambdafromTarget(Target)
         logging.info('No Lambda or Target data:  assumed to be Co Ka')
     
+    sigmaa = FWHMa / (2*sqrt(2*log(2)))
+    sigmab = FWHMb / (2*sqrt(2*log(2)))
     #########    Process Background     #######################################
     
-    BGsmoothing,w,w2,Polyorder,addBG,INIsmoothing,OStarget,a,b,Target = Setparameters()
+    BGsmoothing,w,w2,Polyorder,addBG,INIsmoothing,OStarget = Setparameters()
 
     BGpoly = BGfit(angle, diff, BGsmoothing, w, w2, Polyorder)
 
@@ -164,7 +93,7 @@ def Qanalyze(angle, diff, difdata, phaselist, selectedphases, Lambda, Target):
     DBInt = DB[:,:,1]
     
     Thresh = setQthresh(RIR)    
-    
+
     initialize = True
     optimize = True
     
@@ -172,7 +101,7 @@ def Qanalyze(angle, diff, difdata, phaselist, selectedphases, Lambda, Target):
     if initialize:
         #print "number of mineral before initialization: ",sum(enable)
         logging.info("Start Initialization")
-        Iinit = getIinit(angle,diff,BGpoly,DB2T, DBInt, mineral, RIR, enable, INIsmoothing, OStarget, a, b)
+        Iinit = getIinit(angle,diff,BGpoly,DB2T, DBInt, mineral, RIR, enable, INIsmoothing, OStarget, sigmaa, sigmab)
         '''for i in range (0, len(mineral)):
             if enable[i]>0:
                 print mineral[i], "=", Iinit[i]
@@ -199,7 +128,7 @@ def Qanalyze(angle, diff, difdata, phaselist, selectedphases, Lambda, Target):
     else:
         Iinit = np.array(([1.] * len(enable)))* np.array(enable)
     
-    param = makeparam(mineral, RIR, enable, DB2T, DBInt, a, b, False)
+    param = makeparam(mineral, RIR, enable, DB2T, DBInt, sigmaa, sigmab, False)
     
     Sum_init = gausspat(Iinit, angle, param)
     Sum_init *= max(diff-BGpoly)/max(Sum_init)
@@ -217,7 +146,7 @@ def Qanalyze(angle, diff, difdata, phaselist, selectedphases, Lambda, Target):
         
         logging.info("Start computing optimization")
         
-        I = Qrefinelstsq(angle, diff, BGpoly, DB2T, DBInt, mineral, RIR, enable, Thresh, Iinit, a, b, Lambda, False)
+        I = Qrefinelstsq(angle, diff, BGpoly, DB2T, DBInt, mineral, RIR, enable, Thresh, Iinit, sigmaa, sigmab, Lambda, False)
         
         logging.info("Done computing optimization- starting drawing")
     else:
@@ -231,7 +160,7 @@ def Qanalyze(angle, diff, difdata, phaselist, selectedphases, Lambda, Target):
     DB, RIRcalc, peakcount = makeDB(difdata, mineral, enable, Lambda)
     DB2T = DB[:,:,0]
     DBInt = DB[:,:,1]
-    param = makeparam(mineral, RIR, enable, DB2T, DBInt, a, b, False)
+    param = makeparam(mineral, RIR, enable, DB2T, DBInt, sigmaa, sigmab, False)
     
     Sum= gausspat(I, angle, param)
     Sum *= max(diff-BGpoly)/max(Sum)
@@ -250,9 +179,8 @@ def Qanalyze(angle, diff, difdata, phaselist, selectedphases, Lambda, Target):
     results = []    
     for i in range(0, len(mineral)):
         results.append([mineral[i], '%.2f' %Q[i]])
-    
-    plot = overplotgraph(angle,diff,BGpoly,Sum, results[0:min(10,len(mineral))])
-    return results, plot
+
+    return results, BGpoly, Sum
 
 
 

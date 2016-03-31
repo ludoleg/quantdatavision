@@ -2,6 +2,9 @@ import webapp2
 from google.appengine.ext import ndb
 from google.appengine.api import users
 
+from math import sqrt
+from math import log
+
 import logging
 import StringIO
 
@@ -82,12 +85,17 @@ class setPhase(webapp2.RequestHandler):
             # Checks for Quant session
             # If not, init a session
             if not session:
+                a = -0.001348 
+                b =  0.352021 
                 session = SessionData(user=user_id,
                                       email=user.nickname(),
                                       qtarget = "Co",
-                                      qlambda=0,
+                                      qlambda = 0,
                                       available = phaselist.availablePhases,
-                                      selected = phaselist.defaultPhases)
+                                      selected = phaselist.defaultPhases,
+                                      fwhma = a,
+                                      fwhmb = b
+                )
                 session.put()
             template = JINJA_ENVIRONMENT.get_template('phase.html')
             template_vars = {
@@ -106,20 +114,26 @@ class setCalibration(webapp2.RequestHandler):
         if user:
             user_id = users.get_current_user().user_id() 
             session = SessionData.query(SessionData.user == user_id).get()
-
             if not session:
+                a = -0.001348 
+                b =  0.352021 
                 session = SessionData(user=user_id,
                                       email=user.nickname(),
                                       qtarget = "Co",
-                                      qlambda=0,
+                                      qlambda = 0,
                                       available = phaselist.availablePhases,
-                                      selected = phaselist.defaultPhases)
+                                      selected = phaselist.defaultPhases,
+                                      fwhma = a,
+                                      fwhmb = b
+                )
                 session.put()
             # logging.debug(session)
             template = JINJA_ENVIRONMENT.get_template('calibration.html')
             template_vars = {
                 'lambda': session.qlambda,
                 'target': session.qtarget,
+                'a': session.fwhma,
+                'b': session.fwhmb,
             }
             self.response.out.write(template.render(template_vars))
         else:
@@ -133,12 +147,19 @@ class handleCalibration(webapp2.RequestHandler):
         session = SessionData.query(SessionData.user == user_id).get()
         mylambda = self.request.get('lambda')
         mytarget = self.request.get('target')
-        ludo = float(mylambda)
+        a = self.request.get('fwhma')
+        b = self.request.get('fwhmb')
+
         logging.debug('Lambda retrieved: %s', mylambda)
-        logging.debug('Lambda retrieved: %f', ludo)
         logging.debug('Target retrieved: %s', mytarget)
-        session.qlambda = ludo
+
         session.qtarget = self.request.get('target')
+        if mylambda:
+            session.qlambda = float(mylambda)
+        if a:
+            session.fwhma = float(a)
+        if b:
+            session.fwhmb = float(b)
         session.put()
         self.redirect('/')
 

@@ -9,10 +9,9 @@ import Conductor
 import numpy as np
 import os
 import time
+
 # from Tkinter import *
 # from tkFileDialog import askopenfilename
-
-
 
 datafilepath='XRD_data'
 datafilename = "Mix1A-film.txt"
@@ -22,10 +21,10 @@ phaselistname = 'phaselistall.csv'
 Lambda = 0
 Target = ''
 
-
 # datafilepath, datafilename = os.path.split(askopenfilename(filetypes=[("TXT files","*.txt")], title="Open XRD .txt file"))
-
 # Tk().withdraw()
+#datafilepath, datafilename = os.path.split(askopenfilename(filetypes=[("TXT files","*.txt")], title="Open XRD .txt file"))
+
 t0=time.time()
 difdata = open((os.path.join(DBfilepath, DBname)), 'r').readlines()
 phaselist = open(os.path.join(DBfilepath, phaselistname), 'r').readlines()

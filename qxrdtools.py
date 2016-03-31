@@ -3,8 +3,9 @@ import numpy as np
 from math import *
 import logging
 
-# this file includes tools for computing stuff
-
+"""
+Utilities file for XRD
+"""
 
 def openXRD(blob, nomdufichier):
     """
@@ -467,7 +468,7 @@ def Qrefinelstsq(angle,diff,BGpoly,DB2T, DBInt, mineral, RIR, enable, Thresh, Ii
             
         I, tossme = leastsq(residual, Istart, args=(angle, diff-BGpoly, param),  gtol=precision[counter-1])#, col_deriv=1, maxfev=100)
         I=abs(I)        
-        logging.info( "end LSTSQ #",  counter)
+        # logging.info( "end LSTSQ #",  counter)
         #print "I result:", I
         # enable2 allows reducing the number of phases taken into account in the computation.
         enable2 = Qthresholding(mineral, enable, Thresh, I)

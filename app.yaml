@@ -6,6 +6,9 @@ vm: true
 manual_scaling:
   instances: 1
 
+resources:
+  cpu: 1
+
 handlers:
 - url: /stylesheets
   static_dir: static/stylesheets

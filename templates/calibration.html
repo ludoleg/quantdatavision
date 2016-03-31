@@ -9,34 +9,34 @@
       >
   <div class="container">
     <div class="row">
-    <div class="form-group col-xs-3">
-      <label for="lambda">Lambda (Å): </label>
-      <input type="text" class="form-control" name="lambda" value="{{ lambda }}">
-    </div>
-    </div>
-    <div class="row">
-    <div class="form-group col-xs-3">
-      <label for="a">a: </label>
-      <input type="text" class="form-control" name="a" value="{{ a }}">
-    </div>
-    <div class="form-group col-xs-3">
-      <label for="b">b: </label>
-      <input type="text" class="form-control" name="a" value="{{ b }}">
-    </div>
+      <div class="form-group col-xs-3">
+	<label for="lambda">Lambda (Å): </label>
+	<input type="text" class="form-control" name="lambda" value="{{ lambda }}">
+      </div>
     </div>
     <div class="row">
-    <div class="form-group col-xs-3">
-      <label for="target">Select Target:</label>
-      <select class="form-control" name="target">
-	{% if target == "Cu" %}
-	<option selected>Cu</option>
-	<option>Co</option>
-	{% else %}
-	<option>Cu</option>
-	<option selected>Co</option>
-	{% endif %}
-      </select>
+      <div class="form-group col-xs-3">
+	<label for="target">Select Target:</label>
+	<select class="form-control" name="target">
+	  {% if target == "Cu" %}
+	  <option selected>Cu</option>
+	  <option>Co</option>
+	  {% else %}
+	  <option>Cu</option>
+	  <option selected>Co</option>
+	  {% endif %}
+	</select>
+      </div>
     </div>
+    <div class="row">
+      <div class="form-group col-xs-3">
+	<label for="a"> FWHMa: </label>
+	<input type="text" class="form-control" name="fwhma" value="{{ a }}">
+      </div>
+      <div class="form-group col-xs-3">
+	<label for="b"> FWHMb: </label>
+	<input type="text" class="form-control" name="fwhmb" value="{{ b }}">
+      </div>
     </div>
     <hr>
     <div class="row">

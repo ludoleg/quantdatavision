@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from math import *
 import logging
 
-
+from numba import jit
 
 def openXRD(filename):
     """
@@ -392,7 +392,7 @@ def makeparam(mineral, RIR, enable, DB2T, DBInt, a, b, addBG):
             param[(1+i)*1000 + 2*j+1] = DBInt[i,j] 
     return param   
 
-    
+
 def gausspat (I, X, param):
 ##  uses same parameter convention as "residual"
 #
@@ -405,11 +405,10 @@ def gausspat (I, X, param):
             DB2T = param[j]
             Irel = param[j+1]
             S = param[0]*DB2T + param[1]   #S=sigma
-            Yg += I[i]*Irel*RIR/S/sqrt(2*pi) * e**(-(X-DB2T)**2/2/S**2)
+            # Yg += I[i]*Irel*RIR/S/sqrt(2*pi) * e**(-(X-DB2T)**2/2/S**2)
+            Yg += I[i]*Irel*RIR/S/2.5 * e**(-(X-DB2T)**2/2/S**2)
             j += 2
     return Yg
-
-
 
 def residual(I, X, Yexp, param):
     """
@@ -426,7 +425,6 @@ def residual(I, X, Yexp, param):
 
     return (Yexp-Yg)
    
-
 def Qrefinelstsq(angle,diff,BGpoly,DB2T, DBInt, mineral, RIR, enable, Thresh, Iinit, a, b, Lambda, addBG):
     """
     This function refine the % values of the mineral in the mixture using least-square optimization method.
