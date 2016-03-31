@@ -2,8 +2,7 @@ import webapp2
 from google.appengine.ext import ndb
 from google.appengine.api import users
 
-from math import sqrt
-from math import log
+import json
 
 import logging
 import StringIO
@@ -253,6 +252,15 @@ class FileUploadFormHandler(webapp2.RequestHandler):
 class leave(webapp2.RequestHandler):
     def get(self):
         self.redirect(users.create_logout_url('/'))
+
+class isLogged(webapp2.RequestHandler):
+    def get(self):
+        username = ''
+        user = users.get_current_user()
+        if user:
+            username = user.nickname()
+        self.response.content_type = 'application/json'
+        self.response.write(json.dumps(username))
         
 # logging.getLogger().setLevel(logging.DEBUG)
         
@@ -267,6 +275,7 @@ app = webapp2.WSGIApplication([
     ('/img', renderImage),
     ('/process', processFile),
     ('/upload_form', FileUploadFormHandler ),
+    ('/isLogged', isLogged ),
     ('/leave', leave ),
     ('/', ShowHome),
 ], debug=True)
