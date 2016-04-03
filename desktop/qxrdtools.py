@@ -7,7 +7,6 @@ Created on Wed Aug 20 16:03:16 2014
 
 from scipy.optimize import leastsq
 import numpy as np
-import matplotlib.pyplot as plt
 from math import *
 import logging
 import sys

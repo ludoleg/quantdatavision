@@ -1,7 +1,4 @@
-import logging
-import numpy as np
 from qxrdtools import *
-import time
 
 '''
 code was modified to enable selectedphase list to be used.  QXRDtools remains unchanged.
