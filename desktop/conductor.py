@@ -1,6 +1,7 @@
 import logging
 import numpy as np
 from qxrdtools import *
+import time
 
 '''
 code was modified to enable selectedphase list to be used.  QXRDtools remains unchanged.
@@ -32,7 +33,7 @@ def activatephases(mineral, enable, selectedphases):
     This function activates phases by modifying the enable list based on a selected file files
     To be used with web-ap phase selection tool
     '''
-    for i in range(1, len(mineral)):
+    for i in range(0, len(mineral)):
         if mineral[i] in selectedphases:
             enable[i] = 1
         else:
@@ -87,21 +88,26 @@ def Qanalyze(angle, diff, difdata, phaselist, selectedphases, Lambda, Target, FW
     #######################   Extract from difdata      ############
     
     logging.info("Starting extracting from difdata")
-
+    starttime = time.time()
     DB, RIRcalc, peakcount = makeDB(difdata, mineral, enable, Lambda)
     DB2T = DB[:,:,0]
     DBInt = DB[:,:,1]
+    PatDB, enable = calculatePatDB(angle,DB2T, DBInt, mineral, RIR, enable, sigmaa, sigmab)
     
-    Thresh = setQthresh(RIR)    
-
+    #print "Completed calculatePatDB, shape:",PatDB.shape
+    logging.info("PatDB computing time = %.3fs" %(time.time()-starttime))
+    Thresh = setQthresh(RIR)
+    trashme = RIR
+    mineral, RIR, enable, Thresh, trashme, PatDB = CleanMineralListPatDB (mineral, RIR, enable, Thresh, trashme, PatDB)
+    
     initialize = True
     optimize = True
     
-    
+    starttime = time.time()
     if initialize:
         #print "number of mineral before initialization: ",sum(enable)
         logging.info("Start Initialization")
-        Iinit = getIinit(angle,diff,BGpoly,DB2T, DBInt, mineral, RIR, enable, INIsmoothing, OStarget, sigmaa, sigmab)
+        Iinit = getIinitPatDB(angle,diff,BGpoly,PatDB, mineral,enable, INIsmoothing, OStarget)
         '''for i in range (0, len(mineral)):
             if enable[i]>0:
                 print mineral[i], "=", Iinit[i]
@@ -117,70 +123,58 @@ def Qanalyze(angle, diff, difdata, phaselist, selectedphases, Lambda, Target, FW
         logging.info("Done computing Initialization")
        
         #####     remove minerals disabled by initialization       ################     
-        mineral, RIR, enable, Thresh, Iinit = CleanMineralList (mineral, RIR, enable, Thresh, Iinit)
-        ####    #redo DB with shorter list    #####
-        DB, RIRcalc, peakcount = makeDB(difdata, mineral, enable, Lambda)
-        DB2T = DB[:,:,0]
-        DBInt = DB[:,:,1]
+        mineral, RIR, enable, Thresh, Iinit, PatDB = CleanMineralListPatDB (mineral, RIR, enable, Thresh, Iinit, PatDB)
+
         #print "number of mineral after initialization: ", sum(enable)
 
         
     else:
         Iinit = np.array(([1.] * len(enable)))* np.array(enable)
-    
-    param = makeparam(mineral, RIR, enable, DB2T, DBInt, sigmaa, sigmab, False)
-    
-    Sum_init = gausspat(Iinit, angle, param)
-    Sum_init *= max(diff-BGpoly)/max(Sum_init)
+
+
+    Sum_init = sumPat(Iinit, PatDB)
+    #Sum_init *= max(diff-BGpoly)/max(Sum_init)
     Sum_init += BGpoly
     Qinit = Iinit/sum(Iinit)*100
-    '''
-    for i in range (0, len(mineral)):
-        print mineral[i], "=", Qinit[i]
-    '''
+    logging.info( "Iinit computing time = %.3fs" %(time.time()-starttime))
+    
     for i in range(0,len(mineral)):
         logging.info("Qinit_%s : %.2f " %(mineral[i], Qinit[i]))
     
     #print "Phases enabled before optimize = ", sum(enable)
+    starttime = time.time()
     if optimize:
         
         logging.info("Start computing optimization")
         
-        I = Qrefinelstsq(angle, diff, BGpoly, DB2T, DBInt, mineral, RIR, enable, Thresh, Iinit, sigmaa, sigmab, Lambda, False)
+        mineral, RIR, enable, Thresh, I, PatDB = QrefinelstsqPatDB(angle, diff, BGpoly, mineral, RIR, enable, Thresh, Iinit, PatDB)
         
         logging.info("Done computing optimization- starting drawing")
     else:
         I = Iinit
-    #print "Phases enabled = ", sum(enable)
+    logging.info("Phases enabled = %.0f", sum(enable))
     logging.debug("Done phaseanalyze")
     #####  reorganize results by decreasing % order #########
-    mineral, RIR, enable, Thresh, I = CleanMineralList(mineral, RIR, enable, Thresh, I)
-    mineral, RIR, enable, Thresh, I = sortQlist(mineral, RIR, enable, Thresh, I)
+    mineral, RIR, enable, Thresh, I, PatDB = CleanMineralListPatDB(mineral, RIR, enable, Thresh, I, PatDB)
+    mineral, RIR, enable, Thresh, I, PatDB = sortQlistPatDB(mineral, RIR, enable, Thresh, I, PatDB)
     ####    #redo DB with shorter list    #####
-    DB, RIRcalc, peakcount = makeDB(difdata, mineral, enable, Lambda)
-    DB2T = DB[:,:,0]
-    DBInt = DB[:,:,1]
-    param = makeparam(mineral, RIR, enable, DB2T, DBInt, sigmaa, sigmab, False)
-    
-    Sum= gausspat(I, angle, param)
-    Sum *= max(diff-BGpoly)/max(Sum)
-    Sum += BGpoly
-    '''
-    for i in range (0, len(mineral)):
-        print mineral[i], "=", I[i]
-    '''
-    Q = I/sum(I)*100
 
+    Sum= sumPat(I, PatDB)
+    #Sum *= max(diff-BGpoly)/max(Sum)
+    Sum += BGpoly
+    
+    for i in range (0, len(mineral)):
+        logging.info("%s = %.2f" %(mineral[i], I[i]))
+    
+    Q = I/sum(I)*100
+    logging.info("I Lstsq computing time = %.3fs" %(time.time()-starttime))
     logging.debug(mineral)
     
-    for i in range(0,len(mineral)):
+    '''for i in range(0,len(mineral)):
         logging.info("Q_%s : %.2f " %(mineral[i], Q[i]))
-    
+    '''
     results = []    
     for i in range(0, len(mineral)):
         results.append([mineral[i], '%.2f' %Q[i]])
 
     return results, BGpoly, Sum
-
-
-
