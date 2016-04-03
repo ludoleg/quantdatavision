@@ -8,7 +8,7 @@ import StringIO
 Non interactive matplot lib backend Agg is used for the web app
 
 '''
-def overplotgraph(angle,diff,BGpoly,Sum, graphlist):
+def overplotgraph(angle,diff,BGpoly,Sum, graphlist, filename):
     fig = plt.figure(figsize=(15,5)) 
     plt.plot(angle, diff, linestyle="none",  marker=".",  color="black")
     fig.patch.set_facecolor('white')
@@ -29,7 +29,8 @@ def overplotgraph(angle,diff,BGpoly,Sum, graphlist):
     plt.plot(angle, offsetline, linestyle="solid", color="pink")
     
     FOM = sum(abs(diff-Sum))/len(diff)
-    plt.text(6, offset/10*12, "FOM = %.2f" %(FOM), fontsize=12, color="red")
+    plt.text(6, offset/10*12, filename, fontsize=12, color="black")
+    plt.text(50, offset/10*12, "FOM = %.2f" %(FOM), fontsize=12, color="red")
     vertpos = offset/10*9
     for i in range(0,len(graphlist)):
         plt.text(6, vertpos,"%s :" %graphlist[i][0], fontsize=12, color="blue")

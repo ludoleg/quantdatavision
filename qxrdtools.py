@@ -1,11 +1,20 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Aug 20 16:03:16 2014
+
+@author: philippe
+"""
+
 from scipy.optimize import leastsq
 import numpy as np
+import matplotlib.pyplot as plt
 from math import *
 import logging
+import sys
+import time
 
-"""
-Utilities file for XRD
-"""
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+#from numba import jit
 
 def openXRD(blob, nomdufichier):
     """
@@ -55,14 +64,11 @@ def openXRD(blob, nomdufichier):
         logging.debug("file format error: plv, txt, dif, mdi required.")
         
     return angle, diff #, target, Lambda  needs to be coded in txt and plv
-
-#############################################################################################
-
-
     
 def extractlists(phaselist) :
-    ######### extracts 3 lists: mineral, RIR, enable #############################
-    
+    '''
+    #### extracts 3 lists: mineral, RIR, enable 
+    '''
     mineral=[]
     RIR=[]
     enable=[]
@@ -76,82 +82,79 @@ def extractlists(phaselist) :
         RIR.append(float(phaselist[i][1]))
         enable.append(int(phaselist[i][2]))    
     return mineral, RIR, enable
-    
 
+'''
+Bellow is the function to calculate the gaussian patterns using an erf function instead of a gaussian, to avoid sampling errors. 
+It works but it's incredibly slow.   (65.s vs 1.5s).   Saved for later use:
+if we detect 2theta sampling conditions not meeting Nyquist rule.
+if max(FWHM) <2* 2theta_step (2theta_step =(X[len(X)-1]-X[0])/(len(X)-1)) then use gausspeakerf in place of gausspeak.
 
-def scalepattern(X, Yexp, DB2T, DBInt, RIR, a, b, OStarget):
-    """
-    #   used to initialize a mineral intensity
-    #  OStarget = overshoot target ratio, corresponds to the proportion of 
-    #  integral intensity of the mineral that shoots over the experimaental data
-    """
-    tol = .5
-    I = 1.
-    if RIR > 0:
-        Yg = np.zeros_like(X)
-        for i in range(0, len(DB2T)):
-            S = a * DB2T[i] + b
-            Yg += (DBInt[i]*RIR/S/sqrt(2*pi)) * e**(-(X-DB2T[i])**2/2/S**2)
-
-        Gauss_area = sum(Yg)
-        negativearea = 0
+def phi(x):
+    #Cumulative distribution function for the standard normal distribution
+    #used to calculate the integral of the gaussian distribution inside a 2Theta bin
+    phi=(1.0 + erf(x / sqrt(2.0))) / 2.0
+    return phi
     
-        for i in range(0, len(X)):
-            if Yexp[i] < 0:
-                negativearea += abs(Yexp[i])
-                tol = 0.8  # tolerance factor on overshoot target
-        ontarget = False
-        if Gauss_area <= 0 :
-            ontarget = True
-            I = 0
-            
-    while ontarget==False:
-        
-        difference = Yexp - Yg*I
-        negativearea2 = 0        
-        for i in range(0, len(X)):
-            if difference[i] < 0:
-                negativearea2 += abs(difference[i])      
-        overshoot = (negativearea2-negativearea)/Gauss_area
-        if overshoot < OStarget*tol:
-            I *= 1.2
-        elif overshoot > OStarget/tol:
-            I /= 1.3
-        else:
-            ontarget = True
-    
+def gausspeakerf(X,X0,S):
+    #X = 2T array, X0+peak position, S=sigma
+    #calculates peak profile using Phi(x) function
+    step = (X[len(X)-1]-X[0])/(len(X)-1)
+    I = np.zeros_like(X)
+    for i in range(0, len(X)-1):
+        I[i] = phi((X[i]-X0+step/2)/S) - phi((X[i]-X0-step/2)/S)        
     return I
 '''
-    
-def scalepattern(X, Yexp, DB2T, DBInt, RIR, a, b, OStarget):
-    """
-    #   used to initialize a mineral intensity
-    #  fater computation then previous, uses ratio of patterns instead of itterative process
-    """
-    tol = .5
-    I = 1.
-    if RIR > 0:
-        Yg = np.zeros_like(X)
-        for i in range(0, len(DB2T)):
-            S = a * DB2T[i] + b
-            Yg += (DBInt[i]*RIR/S/sqrt(2*pi)) * e**(-(X-DB2T[i])**2/2/S**2)
 
-        patternration = Yexp / Yg
-        
-        for i in range(0, len(DB2T)):
-            
-    
+def gausspeak(X,X0,S):
+    #X = 2Theta array, X0+peak position, S=sigma
+    #calculates peak profile using gauss function
+    I = (1/S/sqrt(2*pi)) * e**(-(X-X0)**2/2/S**2)    
     return I
-'''    
+    
+def gausspat (X,twoT, Irel, RIR, a, b):
+    Yg = np.zeros_like(X)
+    X = np.array(X)
+    for i in range(0, len(twoT)):
+        S = a * twoT[i] + b         
+        Yg += Irel[i]*gausspeak(X, twoT[i], S)
+    Yg *= RIR
+    return Yg
+
+
+def calculatePatDB(X,DB2T, DBInt, mineral, RIR, enable, a, b):
+    '''
+    calculates array of patterns
+    '''
+    PatDB = np.zeros((len(mineral),len(X)))
+    for i in range(0, len(mineral)):
+        if enable[i]==1:
+            PatDB[i] = gausspat(X,DB2T[i], DBInt[i], RIR[i], a, b)
+            if sum(PatDB[i])<10:  # this is to disable phases with no peaks in the angular range
+                enable[i]=0
+    return PatDB, enable
+
+
+def sumPat(I, PatDB):
+    '''
+    computes the sum of patterns with I as intensity vector
+    take PatDB 2D array and I 1D array
+    '''
+    PatDB = np.array(PatDB)    
+    sumPat = np.zeros(PatDB.shape[1])
+    for i in range(0,PatDB.shape[0]):
+        sumPat+= I[i]*PatDB[i]
+    return sumPat
+
     
 def BGfit(angle, diff, BGsmoothing, w, w2, Polyorder):
+    '''
     ####################   fits background   ###########################
     # Smoothing option
     #  BGsmoothing = boolean
     #  w = window width for minimum testing (INT)
     #  w2 = window width for averaging (INT)
     #  Polyorder= polynomial fit order (INT)
-
+    '''
     if BGsmoothing:
         BGthresh = 1.25  
     else: 
@@ -178,7 +181,6 @@ def BGfit(angle, diff, BGsmoothing, w, w2, Polyorder):
             BGY.append(diffBG[i])
     #########   Polynomial fit   ########################################
     if len(BGY)<10:
-        #print "too few background points selected"
         BGpoly = diff-diff
     else:
         polycoefs = []
@@ -190,17 +192,13 @@ def BGfit(angle, diff, BGsmoothing, w, w2, Polyorder):
     return BGpoly
 
 
-
-
 def getLambdafromTarget(Target):
     if Target == "Cu":
         Lambda = 1.541838
     elif Target == 'Co':
         Lambda = 1.78897
-    #else : print 'ERROR: Tube target material unknown'
+    else : logging.info( 'ERROR: Tube target material unknown')
     return Lambda
-
-
 
 
 def makeDB(difdata, mineral, enable, Lambda):
@@ -257,14 +255,10 @@ def makeDB(difdata, mineral, enable, Lambda):
                     for k in range(3,6):
                         cellparam[k] *=pi/180
                     Vcell = cellparam[0] * cellparam[1] *cellparam[2] * (1- (cos(cellparam[3]))**2 - (cos(cellparam[4]))**2 - (cos(cellparam[5]))**2 + 2 * cos(cellparam[3]) * cos(cellparam[4]) * cos(cellparam[5]))**0.5
-                    #print "a=%.2f, b=%.2f, c=%.2f" % (cellparam[0], cellparam[1], cellparam[2])               
-                    #print "alpha=%.2f, beta=%.2f, Gamma=%.2f" % (cellparam[3], cellparam[4], cellparam[5])                    
-                    #print Vcell
                 elif j >= start and peaknum < 20:
                     linedata = difdata[j]   #       linedata = linedata[16:len(linedata)]
                     datavalues = [float(n) for n in linedata.split()]
                     if len(datavalues)==7:
-                        #print datavalues
                         #datavalues contains data in difdata card: 2T I d H K L Multiplicity
                         ##  recalculate 2t positions depending on Lambda  
                         datavalues[0] = 2*180/pi*asin(Lambda/2/datavalues[2])
@@ -274,7 +268,6 @@ def makeDB(difdata, mineral, enable, Lambda):
             peakcount += peaknum + 1
             if iv2 > 0 and Vcell > 0:
                 Imax = (iv2*Vcell)/3978.77*4
-                #print mineral[i] + "  : Imax =%.2f" % Imax
                 RIRcalc.append(Imax)
             else:
                 RIRcalc.append(0)
@@ -282,7 +275,43 @@ def makeDB(difdata, mineral, enable, Lambda):
     return DB, RIRcalc, peakcount
 #######################################################################################################################
 
-def getIinit(angle,diff,BGpoly,DB2T, DBInt, mineral, RIR, enable, INIsmoothing, OStarget,a,b):
+
+def scalePat(X, Yexp, Pat, OStarget):
+    """
+    #  Scales pattern intensity using PatDB for initialization
+    """
+    tol = .5
+    I = 1.
+
+    Pat_area = sum(Pat)
+    negativearea = 0
+
+    for i in range(0, len(X)):
+        if Yexp[i] < 0:
+            negativearea += abs(Yexp[i])
+            tol = 0.8  # tolerance factor on overshoot target
+    ontarget = False
+    if Pat_area <= 0 :
+        ontarget = True
+        I = 0 
+    while ontarget==False:
+        
+        difference = Yexp - Pat*I
+        negativearea2 = 0
+        for i in range(0, len(X)):
+            if difference[i] < 0:
+                negativearea2 += abs(difference[i])      
+        overshoot = (negativearea2-negativearea)/Pat_area
+        if overshoot < OStarget*tol:
+            I *= 1.2
+        elif overshoot > OStarget/tol:
+            I /= 1.2999
+        else:
+            ontarget = True
+    return I
+
+
+def getIinitPatDB(angle,diff,BGpoly,PatDB, mineral, enable, INIsmoothing, OStarget):
     """
     #######################   Initialization   ###################################
     ############   Computes mineral intensity sustained under diffractogram   ####
@@ -292,9 +321,8 @@ def getIinit(angle,diff,BGpoly,DB2T, DBInt, mineral, RIR, enable, INIsmoothing, 
     """    
     
     
-    Iinit = np.zeros_like(RIR)
+    Iinit = np.zeros(len(mineral))
     diffsmooth = np.zeros_like(diff)
-    
     if INIsmoothing:
         w3 = 4  #width of smooothing window
         for i in range(0,len(angle)):
@@ -303,43 +331,48 @@ def getIinit(angle,diff,BGpoly,DB2T, DBInt, mineral, RIR, enable, INIsmoothing, 
             diffsmooth[i] = np.mean(diff[minsmooth:maxsmooth])  #computes smoothed value for i
     
     for i in range(0, len(mineral)):
-        if RIR[i] > 0 and enable[i] >0:
-            #print "RIR(" + mineral[i] + ')= %.1f' %RIR[i]
-            Iinit[i] = scalepattern(angle, (diff-BGpoly), DB2T[i], DBInt[i], RIR[i], a, b, OStarget)
-            #print Iinit[i]
+        if  enable[i] == 1:
+            Iinit[i] = scalePat(angle, (diff-BGpoly),PatDB[i],OStarget)
         else :
             Iinit[i] = 0
     return Iinit
 
+
 def Ithresholding(mineral, enable,RIR, Ithreshratio, I):
+    '''
     ####  turns minerals OFF (enable =0) if under their threshold%   ##############
-    
+    '''
     for i in range(0, len(enable)):        
         if enable[i]<>0 and  I[i] < max(I)*Ithreshratio:
             enable[i] = 0
-            #print mineral[i], "- init : %.4f >>> eliminated\t" %I[i]  
+            #logging.info("%s- init : %.4f >>> eliminated\t" %(mineral[i],I[i]))
     return enable
 
 
 def Qthresholding(mineral, enable, Thresh, I):
+    '''
     ####  turns minerals OFF (enable =0) if under their threshold%   ##############
+    '''
     Q = I*enable/sum(I)*100
     
     for i in range(0, len(enable)):        
         if enable[i]<>0 and  Q[i] < Thresh[i]:
             enable[i] = 0
-            #print mineral[i], "- init : %.1f >>> eliminated\t" %Qinit[i]  
+            #logging.info( "%s- init : %.1f >>> eliminated\t" %(mineral[i],Q[i]))
     return enable
 
-
-def CleanMineralList (mineral, RIR, enable, Thresh, I):
+def CleanMineralListPatDB (mineral, RIR, enable, Thresh, I, PatDB):
+    '''
     #####  removes minerals in list if enable=0
     #####  restructures all lists in input
+    #t0=time.time()
+    '''
     mineralthresh = []
     RIRthresh=[]
     enablethresh=[]
     Threshthresh=[]
     Ithresh=[]
+    PatDBthresh=[]
     
     for i in range(0, len(mineral)):
         if enable[i] == 1:
@@ -348,21 +381,22 @@ def CleanMineralList (mineral, RIR, enable, Thresh, I):
             enablethresh.append(enable[i])
             Threshthresh.append(Thresh[i])
             Ithresh.append(I[i])
-            
-    return mineralthresh, RIRthresh, enablethresh, Threshthresh, Ithresh
+            PatDBthresh.append(PatDB[i])
+    #logging.info("list cleanup computing time = %.2f" %(time.time()-t0))
+    return mineralthresh, RIRthresh, enablethresh, Threshthresh, Ithresh, PatDBthresh
 
 
 def getKey(item):
     # used for sorting % results in decreasing order
     return item[4]
-    
-    
-def sortQlist(mineral, RIR, enable, Thresh, I):
+
+
+def sortQlistPatDB(mineral, RIR, enable, Thresh, I, PatDB):
     
     #######################   sorts lists in decreasing Q order      ############
     table = []
     for i in range(0,len(mineral)):
-        table.append([mineral[i], RIR[i], enable[i], Thresh[i], I[i]])
+        table.append([mineral[i], RIR[i], enable[i], Thresh[i], I[i], PatDB[i]])
 
     table.sort(key=getKey, reverse=True)
     
@@ -371,6 +405,7 @@ def sortQlist(mineral, RIR, enable, Thresh, I):
     RIRsorted=[]
     Threshsorted=[]
     Isorted=[]
+    PatDBsorted=[]
     
     for i in range(0,len(mineral)):
         mineralsorted.append(table [i][0])
@@ -378,73 +413,20 @@ def sortQlist(mineral, RIR, enable, Thresh, I):
         enablesorted.append(table[i][2])
         Threshsorted.append(table[i][3])
         Isorted.append(table[i][4])
+        PatDBsorted.append(table[i][5])
     
-    return mineralsorted, RIRsorted, enablesorted, Threshsorted, Isorted
+    return mineralsorted, RIRsorted, enablesorted, Threshsorted, Isorted, PatDBsorted    
     
-def makeparam(mineral, RIR, enable, DB2T, DBInt, a, b, addBG):
-    """
-    calculate parameter list for functions
-    ############################
-    #   param:  
-    #   0 = a sigma
-    #   1 = b sigma
-    #   2 = addBG
-    #   3 = 
-    #   10 = start RIR vector
-    #   1000 = start index DB2T mineral 1 (step2)
-    #   1001 = start index DBInt mineral 1 (step2)
-    #   2000 = start index DB2T mineral 2 (step2)
-    #   2001 = start index DBInt mineral 2 (step2)
-    #   .....etc
-    ###############################
-    """
-
-    param = [0]*(1000*2*(len(mineral)+1))
-    param[0]= a
-    param[1] = b
-    for i in range(0, len(mineral)):
-        param[i+10] = RIR[i]*enable[i]
-        for j in range(0, DB2T.shape[1]/2):
-            param[(1+i)*1000 + 2*j] = DB2T[i,j]
-            param[(1+i)*1000 + 2*j+1] = DBInt[i,j] 
-    return param   
-
-    
-def gausspat (I, X, param):
-##  uses same parameter convention as "residual"
-#
-    Yg = np.zeros_like(X)
-    X = np.array(X)
-    for i in range(0, len(I)):  #index scanning all phases
-        RIR = param[i+10]
-        j=(i+1)*1000
-        while param[j] > 0 and RIR > 0:
-            DB2T = param[j]
-            Irel = param[j+1]
-            S = param[0]*DB2T + param[1]   #S=sigma
-            Yg += I[i]*Irel*RIR/S/sqrt(2*pi) * e**(-(X-DB2T)**2/2/S**2)
-            j += 2
-    return Yg
-
-
-
-def residual(I, X, Yexp, param):
+def residualPatDB(I, Yexp, PatDB):
     """
     # Residual function for least square optimization of gaussian peaks 
     #  variable to refine:  I = intensity factors list  
-    #  param as definded in makeparam function
     """
     I = abs(I)
-    Yg = gausspat(I,X,param)
-    if param[2] > 0:  #this line adds a refined constant background
-        Yg = Yg + I[len(I)-1]
+    return (Yexp-sumPat(I, PatDB))
 
-    #print "integral error = %.2f" % (sum(abs(Yexp-Yg))/len(Yexp))
 
-    return (Yexp-Yg)
-   
-
-def Qrefinelstsq(angle,diff,BGpoly,DB2T, DBInt, mineral, RIR, enable, Thresh, Iinit, a, b, Lambda, addBG):
+def QrefinelstsqPatDB(angle,diff,BGpoly, mineral, RIR, enable, Thresh, Iinit, PatDB):
     """
     This function refine the % values of the mineral in the mixture using least-square optimization method.
     Requires scipy
@@ -452,38 +434,31 @@ def Qrefinelstsq(angle,diff,BGpoly,DB2T, DBInt, mineral, RIR, enable, Thresh, Ii
     Keep_refining = True
     counter = 0 # counts iteration of the refinement.
     I = abs(np.array(Iinit))
-    precision=[0.1, 0.01, 0.01]
+    precision=[0.1, 0.05, 0.01]
 
     while Keep_refining:
         ## recalculate DB with current list
         counter +=1
-        logging.debug("Counter: {}".format(counter))
-        # print "counter = ", counter
-        param = makeparam(mineral, RIR, enable, DB2T, DBInt, a, b, addBG)
+        t0=time.time()
+        logging.info( "counter = %s     minerals:%s", counter, sum(enable))
         Keep_refining = False
         Istart = I
-        if addBG<>0:
-            Istart.append(addBG)
-            param[2]=1
             
-        I, tossme = leastsq(residual, Istart, args=(angle, diff-BGpoly, param),  gtol=precision[counter-1])#, col_deriv=1, maxfev=100)
-        I=abs(I)        
-        # logging.info( "end LSTSQ #",  counter)
-        #print "I result:", I
-        # enable2 allows reducing the number of phases taken into account in the computation.
+        I, tossme = leastsq(residualPatDB, Istart, args=(diff-BGpoly, PatDB),  gtol=precision[counter-1])#, col_deriv=1, maxfev=100)
+        I=abs(I)       
+        logging.info( "end LSTSQ #%s",  counter)
+
         enable2 = Qthresholding(mineral, enable, Thresh, I)
-        I *= enable2
+        #I *= enable2
         
         if sum(enable2) < sum(enable):
             Keep_refining = True
             enable = enable2
+            mineral, RIR, enable, Thresh, I, PatDB = CleanMineralListPatDB(mineral, RIR, enable, Thresh, I, PatDB)
         
         if counter < 3:
             Keep_refining = True
-        '''if counter == 3:
-            print "Step 3 results: "            
-            for i in range (0, len(mineral)):
-                    print mineral[i], "=",I[i]
-        '''
+
+        logging.info( "lstsq computing time =%s", (time.time()-t0))
         
-    return I
+    return mineral, RIR, enable, Thresh, I, PatDB 

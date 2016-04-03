@@ -63,7 +63,7 @@ def GenerateChart(obj_key):
     twoT, diff = conductor.openXRD(XRDdata, filename)
 
     results, BG, calcdiff =      conductor.Qanalyze(twoT, diff ,difdata, phaselist, selectedPhases, Lambda, Target, FWHMa, FWHMb)
-    rv_plot = overplotgraph(twoT,diff,BG,calcdiff, results[0:min(10,len(results))])
+    rv_plot = overplotgraph(twoT,diff,BG,calcdiff, results[0:min(10,len(results))], filename)
     
     rv_plot.seek(0)
     image = Image.open(rv_plot)
