@@ -61,12 +61,12 @@ class CsvDownloadHandler(webapp2.RequestHandler):
     logging.debug("Hello CSV")
     user_key = ndb.Key(urlsafe=url_string)
     user = user_key.get()
-    logging.debug(user.phaselist)
+    logging.debug(user.selected)
     self.response.headers['Content-Type'] = 'text/csv'
     self.response.headers['Content-Disposition'] = 'attachment; filename=phaselist.csv'
     writer = csv.writer(self.response.out)
     writer.writerow(['Mineral','Mass %'])
-    writer.writerows(user.phaselist)
+    writer.writerows(user.selected)
 
 
 class aboutPage(webapp2.RequestHandler):
