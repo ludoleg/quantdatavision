@@ -69,6 +69,13 @@ class CsvDownloadHandler(webapp2.RequestHandler):
     writer.writerows(user.results)
 
 
+class plotPage(webapp2.RequestHandler):
+    def get(self):
+        template = JINJA_ENVIRONMENT.get_template('plot.html')
+        template_vars = {}
+        self.response.out.write(template.render(template_vars))
+
+
 class aboutPage(webapp2.RequestHandler):
     def get(self):
         template = JINJA_ENVIRONMENT.get_template('about.html')
@@ -208,7 +215,8 @@ class processFile(webapp2.RequestHandler):
             'logout_url': logout,
             'user': user.nickname(),
             'key': user_data_key.urlsafe(),
-            'samplename': ludo.sampleFilename
+            'samplename': ludo.sampleFilename,
+            'coord': results
         }
         self.response.out.write(template.render(template_vars))
 
@@ -271,6 +279,7 @@ app = webapp2.WSGIApplication([
     ('/savePhase', handlePhase),
     ('/saveCal', handleCalibration),
     ('/about', aboutPage),
+    ('/plot', plotPage),
     ('/csv',CsvDownloadHandler),
     ('/img', renderImage),
     ('/process', processFile),
