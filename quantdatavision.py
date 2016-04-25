@@ -24,9 +24,9 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 
 def dynamic_png(key):
     rv = StringIO.StringIO()
-    rv = chart.GenerateChart(key)
+    twoT, diff, bgpoly, calcdiff = chart.GenerateChart(key)
     # logging.debug(rv)
-    return rv
+    return twoT, diff, bgpoly, calcdiff
 # return """<img src="data:image/png;base64,%s"/>""" % rv.getvalue().encode("base64").strip()
 
 # [START image_handler]
@@ -206,17 +206,20 @@ class processFile(webapp2.RequestHandler):
         logging.debug(user_data_key)
 
         # Generate image, returns results
-        results = dynamic_png(user_data_key)
+        angle, diff, bgpoly, calcdiff = dynamic_png(user_data_key)
         csv = user_data_key.urlsafe()
         template = JINJA_ENVIRONMENT.get_template('chart.html')
         template_vars = {
             'phaselist': ludo.results,
+            'angle': angle.tolist(),
+            'diff': diff.tolist(),
+            'bgpoly': bgpoly.tolist(),
+            'sum': calcdiff.tolist(),
             'url_text': csv,
             'logout_url': logout,
             'user': user.nickname(),
             'key': user_data_key.urlsafe(),
             'samplename': ludo.sampleFilename,
-            'coord': results
         }
         self.response.out.write(template.render(template_vars))
 

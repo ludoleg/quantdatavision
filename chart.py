@@ -79,7 +79,7 @@ def GenerateChart(obj_key):
     logging.debug(results)
     logging.info("Done with processing")
 
-    return diff
+    return twoT, diff, BG, calcdiff
 
     # This scaling code does not seem to work??
     # image.resize((500,200),Image.NEAREST)
