@@ -1,24 +1,9 @@
 import logging
-from google.appengine.ext import ndb
 import StringIO
 from PIL import Image
 
 import conductor
 import graphit
-
-class SessionData(ndb.Model):
-    user = ndb.StringProperty()
-    email = ndb.StringProperty()
-    selected = ndb.PickleProperty()
-    available = ndb.PickleProperty()
-    results = ndb.PickleProperty()
-    avatar = ndb.BlobProperty()
-    sampleFilename = ndb.StringProperty()
-    sampleBlob = ndb.BlobProperty()
-    qlambda = ndb.FloatProperty()
-    qtarget = ndb.StringProperty()
-    fwhma = ndb.FloatProperty()
-    fwhmb = ndb.FloatProperty()
     
 def GenerateChart(obj_key):
     ##############################################################################

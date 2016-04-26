@@ -12,7 +12,7 @@ import jinja2
 
 # Applications modules
 import chart
-from chart import SessionData
+from models.session import SessionData
 
 import phaselist
 import csv
@@ -54,6 +54,17 @@ class ShowHome(webapp2.RequestHandler):
         }
         self.response.out.write(template.render(template_vars))
 
+class chemin(webapp2.RequestHandler):
+    def get(self):
+        logging.debug('Starting Chemin')
+        ## Code to render home page
+        title = "XRD Qanalyze - Chemin"
+        template = JINJA_ENVIRONMENT.get_template('chemin.html')
+        template_vars = {
+            'title': title,
+        }
+        self.response.out.write(template.render(template_vars))
+        
 class CsvDownloadHandler(webapp2.RequestHandler):
   def get(self):
     url_string = self.request.get('key')
@@ -69,12 +80,30 @@ class CsvDownloadHandler(webapp2.RequestHandler):
     writer.writerows(user.results)
 
 
+class crank(webapp2.RequestHandler):
+    def get(self):
+        user_id = users.get_current_user().user_id()
+        logging.debug(user_id)
+        ludo = SessionData.query(SessionData.user == user_id).get()
+        user_data_key = ludo.key
+        logging.debug(user_data_key)
+        angle, diff, bgpoly, calcdiff = dynamic_png(user_data_key)
+#        json_obj = {'angle': angle.tolist(), 'diff': diff.tolist(), 'bgpoly': bgpoly.tolist()}
+        json_obj = {
+            "filename": ludo.sampleFilename,
+            "angle": angle.tolist(),
+            "diff": diff.tolist(),
+            "bgpoly": bgpoly.tolist(),
+            "calcdiff": calcdiff.tolist()
+            }
+        logging.debug(json.dumps(json_obj))
+        self.response.out.write(json.dumps(json_obj))
+
 class plotPage(webapp2.RequestHandler):
     def get(self):
         template = JINJA_ENVIRONMENT.get_template('plot.html')
         template_vars = {}
         self.response.out.write(template.render(template_vars))
-
 
 class aboutPage(webapp2.RequestHandler):
     def get(self):
@@ -282,7 +311,9 @@ app = webapp2.WSGIApplication([
     ('/savePhase', handlePhase),
     ('/saveCal', handleCalibration),
     ('/about', aboutPage),
+    ('/chemin', chemin),
     ('/plot', plotPage),
+    ('/crank', crank),
     ('/csv',CsvDownloadHandler),
     ('/img', renderImage),
     ('/process', processFile),
