@@ -20,73 +20,94 @@
   </tr>
 {%- endfor %}
 </table>
-<div><a href="/csv?key={{ url_text }}" type="button" class="btn btn-lg btn-success">Download CSV File</button></a></div>
-<script>
-  var trace1 = {
-  x: {{ angle }},
-  y: {{ diff }},
-  mode: 'lines',
-  line: {
-  color: 'rgb(128, 0, 0)',
-  width: 1
-  },
-  name: 'Data',
-  };
-  
-  var trace2 = {
-  x: {{ angle }},
-  y: {{ bgpoly }},
-  mode: 'lines',
-  line: {
-  width: 1
-  },
-  name: 'Background',
-  };
+    <div><a href="/csv?key={{ url_text }}" type="button" class="btn btn-lg btn-success">Download CSV File</button></a></div>
+    <script>
+    var list = {{ phaselist| safe }};
+var phases = '';
+for (var i = 0; i < list.length; i++) {
+    phases += list[i][0];
+    phases += ": ";
+    phases += list[i][1];
+    phases += "%<br>";
+}
 
-  var trace3 = {
-  x: {{ angle }},
-  y: {{ sum }},
-  mode: 'lines',
-  line: {
-  width: 1
-  },
-  name: 'Fit',
-  };
-
-  var data = [trace1, trace2, trace3];
-
-var layout = {
-showlegend: true,
-title: '{{ samplename }}',
-  xaxis: {
-    showgrid: true,
-    zeroline: true,
-    showline: true,
-    title: '2-theta (deg)',
-    gridwidth: 1,
-    zerolinecolor: '#969696',
-    zerolinewidth: 1,
-    linecolor: '#636363',
-    linewidth: 1,
-    mirror: 'ticks',
-    gridcolor: '#bdbdbd'
-  },
-  yaxis: {
-    title: 'Intensity',
-    showgrid: true,
-    zeroline: true,
-    gridwidth: 1,
-    showline: true,
-    zerolinecolor: '#969696',
-    zerolinewidth: 1,
-    linecolor: '#636363',
-    linewidth: 1,
-    mirror: 'ticks',
-    gridcolor: '#bdbdbd'
-  },
+var trace1 = {
+    x: {{ angle }},
+    y: {{ diff }},
+    mode: 'lines',
+    line: {
+	color: 'rgb(128, 0, 0)',
+	width: 1
+    },
+    name: 'Data',
 };
 
-    Plotly.plot(document.getElementById('xrdplot'), data, layout);
+var trace2 = {
+    x: {{ angle }},
+    y: {{ bgpoly }},
+    mode: 'lines',
+    line: {
+	width: 1
+    },
+    name: 'Background',
+};
+
+var trace3 = {
+    x: {{ angle }},
+    y: {{ sum }},
+    mode: 'lines',
+    line: {
+	width: 1
+    },
+    name: 'Fit',
+};
+
+var data = [trace1, trace2, trace3];
+
+var layout = {
+    annotations: [
+	{
+	    x: 0.99,
+	    y: 0.95,
+	    xref: "paper",
+	    yref: "paper",
+	    text: phases,
+	    showarrow: false,
+	    bgcolor: 'rgba(160, 236, 133, 0.7)',
+	    borderpad: 6,
+	    align: 'right'
+	}],
+    showlegend: true,
+    title: '{{ samplename }}',
+    xaxis: {
+	showgrid: true,
+	zeroline: true,
+	showline: true,
+	title: '2-theta (deg)',
+	gridwidth: 1,
+	zerolinecolor: '#969696',
+	zerolinewidth: 1,
+	linecolor: '#636363',
+	linewidth: 1,
+	mirror: 'ticks',
+	gridcolor: '#bdbdbd'
+    },
+    yaxis: {
+	title: 'Intensity',
+	showgrid: true,
+	zeroline: true,
+	gridwidth: 1,
+	showline: true,
+	zerolinecolor: '#969696',
+	zerolinewidth: 1,
+	linecolor: '#636363',
+	linewidth: 1,
+	mirror: 'ticks',
+	gridcolor: '#bdbdbd'
+    },
+};
+
+Plotly.plot(document.getElementById('xrdplot'), data, layout);
 </script>
 {% endblock %}
 
