@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="page-header">
-  <h1>{{ samplename }}</h1>
+  <h2>Diffraction Diagram</h2>
 </div>
 <p>
   <div id="xrdplot" style="width:1200px;height:400px;"></div>
 </p>
-<h1>Phases</h1>
+<h2>Phases</h2>
 <table class="table">
   <tr>
     <th>Mineral</th>
@@ -57,7 +57,7 @@
 
 var layout = {
 showlegend: true,
-title: 'XRD Data',
+title: '{{ samplename }}',
   xaxis: {
     showgrid: true,
     zeroline: true,
