@@ -174,6 +174,39 @@ class setCalibration(webapp2.RequestHandler):
         else:
             logging.info("No user -> need login")
             self.redirect(users.create_login_url(self.request.uri))
+
+class modes(webapp2.RequestHandler):
+    def get(self):
+        logging.debug("Modes")
+        user = users.get_current_user()
+        if user:
+            user_id = users.get_current_user().user_id() 
+            session = SessionData.query(SessionData.user == user_id).get()
+            if not session:
+                a = -0.001348 
+                b =  0.352021 
+                session = SessionData(user=user_id,
+                                      email=user.nickname(),
+                                      qtarget = "Co",
+                                      qlambda = 0,
+                                      available = phaselist.availablePhases,
+                                      selected = phaselist.defaultPhases,
+                                      fwhma = a,
+                                      fwhmb = b
+                )
+                session.put()
+            # logging.debug(session)
+            template = JINJA_ENVIRONMENT.get_template('modes.html')
+            template_vars = {
+                'lambda': session.qlambda,
+                'target': session.qtarget,
+                'a': session.fwhma,
+                'b': session.fwhmb,
+            }
+            self.response.out.write(template.render(template_vars))
+        else:
+            logging.info("No user -> need login")
+            self.redirect(users.create_login_url(self.request.uri))
         
 class handleCalibration(webapp2.RequestHandler):
     def post(self):
@@ -313,6 +346,7 @@ app = webapp2.WSGIApplication([
     ('/about', aboutPage),
     ('/chemin', chemin),
     ('/plot', plotPage),
+    ('/modes', modes),
     ('/crank', crank),
     ('/csv',CsvDownloadHandler),
     ('/img', renderImage),
