@@ -11,13 +11,10 @@ from math import *
 from plottool import *
 import os
 import time
-from Tkinter import *
-from tkFileDialog import askopenfilename
 
-
-
-#datafilepath='/home/philippe/Documents/Projects/Python/quantdatavision/desktop/XRD_data'
-#datafilename = "CalciteP-film.plv"
+datafilepath='XRD_data'
+# datafilename = "CalciteP-film.plv"
+datafilename = "Mix3D-film.txt"
 DBfilepath=''
 DBname="../reduced_difdata.txt"
 phaselistname = 'phaselistall.csv'
@@ -26,9 +23,8 @@ Target = ''
 FWHMa = -0.001348
 FWHMb =  0.352021
 
-datafilepath, datafilename = os.path.split(askopenfilename(filetypes=[("TXT files","*.txt")], title="Open XRD .txt file"))
+# datafilepath, datafilename = os.path.split(askopenfilename(filetypes=[("TXT files","*.txt")], title="Open XRD .txt file"))
 
-Tk().withdraw()
 t0=time.time()
 difdata = open((os.path.join(DBfilepath, DBname)), 'r').readlines()
 phaselist = open(os.path.join(DBfilepath, phaselistname), 'r').readlines()
