@@ -4,7 +4,9 @@ from google.appengine.api import users
 
 import json
 
+import sys
 import logging
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 import os
 import jinja2
@@ -17,9 +19,10 @@ import phaselist
 import csv
 
 JINJA_ENVIRONMENT = jinja2.Environment(
-    loader=jinja2.FileSystemLoader(os.path.dirname(__file__)+ "/templates"),
+    loader=jinja2.FileSystemLoader(os.path.dirname(__file__) + "/templates"),
     extensions=['jinja2.ext.autoescape'],
     autoescape=True)
+
 
 def dynamic_png(key):
     # rv = StringIO.StringIO()
@@ -80,7 +83,7 @@ class CsvDownloadHandler(webapp2.RequestHandler):
     self.response.headers['Content-Type'] = 'text/csv'
     self.response.headers['Content-Disposition'] = 'attachment; filename={}.csv'.format(session.sampleFilename)
     writer = csv.writer(self.response.out)
-    writer.writerow(['Mineral','Mass %'])
+    writer.writerow(['Mineral', 'Mass %'])
     writer.writerows(session.results)
 
 

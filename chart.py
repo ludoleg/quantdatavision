@@ -1,7 +1,9 @@
 import logging
+
 import StringIO
 from PIL import Image
 
+import qxrdtools
 import conductor
 import graphit
     
@@ -45,7 +47,7 @@ def GenerateChart(obj_key):
     logging.info("Start Quant.phase...")
     
     rv_plot = StringIO.StringIO()
-    twoT, diff = conductor.openXRD(XRDdata, filename)
+    twoT, diff = qxrdtools.openXRD(XRDdata, filename)
 
     results, BG, calcdiff =      conductor.Qanalyze(twoT, diff ,difdata, phaselist, selectedPhases, Lambda, Target, FWHMa, FWHMb)
     rv_plot = graphit.overplotgraph(twoT,diff,BG,calcdiff, results[0:min(10,len(results))], filename)
