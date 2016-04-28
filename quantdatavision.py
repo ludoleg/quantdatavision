@@ -5,7 +5,6 @@ from google.appengine.api import users
 import json
 
 import logging
-import StringIO
 
 import os
 import jinja2
@@ -23,7 +22,7 @@ JINJA_ENVIRONMENT = jinja2.Environment(
     autoescape=True)
 
 def dynamic_png(key):
-    rv = StringIO.StringIO()
+    # rv = StringIO.StringIO()
     twoT, diff, bgpoly, calcdiff = chart.GenerateChart(key)
     # logging.debug(rv)
     return twoT, diff, bgpoly, calcdiff
@@ -141,7 +140,7 @@ class setPhase(webapp2.RequestHandler):
             self.response.out.write(template.render(template_vars))
         else:
             logging.info("No user -> need login")
-            self.redirect(users.create_login_url(self.request.uri))
+            self.redirect(users.create_login_url(self.request.url))
 
 class setCalibration(webapp2.RequestHandler):
     def get(self):
@@ -174,7 +173,7 @@ class setCalibration(webapp2.RequestHandler):
             self.response.out.write(template.render(template_vars))
         else:
             logging.info("No user -> need login")
-            self.redirect(users.create_login_url(self.request.uri))
+            self.redirect(users.create_login_url(self.request.url))
 
 class modes(webapp2.RequestHandler):
     def get(self):
@@ -207,7 +206,7 @@ class modes(webapp2.RequestHandler):
             self.response.out.write(template.render(template_vars))
         else:
             logging.info("No user -> need login")
-            self.redirect(users.create_login_url(self.request.uri))
+            self.redirect(users.create_login_url(self.request.url))
         
 class handleCalibration(webapp2.RequestHandler):
     def post(self):
@@ -253,38 +252,53 @@ class processFile(webapp2.RequestHandler):
         logging.debug("Loading File...")
         user = users.get_current_user()
         if user:
-            logging.debug('User signed, object instance: %s', user)
-        logging.debug(user.user_id())
-        logging.debug(user.nickname())
-        logout = users.create_logout_url('/')
-        user_id = users.get_current_user().user_id()
-        logging.debug(user_id)
-        ludo = SessionData.query(SessionData.user == user_id).get()
-        if not ludo:
-            ludo = SessionData(user=user_id, email=user.nickname())
-        ludo.sampleBlob = self.request.get('file')
-        ludo.sampleFilename = self.request.params["file"].filename
-        user_data_key = ludo.put()
-        logging.debug(ludo.sampleFilename)
-        logging.debug(user_data_key)
+            logging.debug('User found, object instance: %s', user)
+            user_id = users.get_current_user().user_id()
+            logging.debug('User id: %s', user_id)
+            logging.debug(user.user_id())
+            logging.debug(user.nickname())
 
-        # Generate image, returns results
-        angle, diff, bgpoly, calcdiff = dynamic_png(user_data_key)
-        csv = user_data_key.urlsafe()
-        template = JINJA_ENVIRONMENT.get_template('chart.html')
-        template_vars = {
-            'phaselist': ludo.results,
-            'angle': angle.tolist(),
-            'diff': diff.tolist(),
-            'bgpoly': bgpoly.tolist(),
-            'sum': calcdiff.tolist(),
-            'url_text': csv,
-            'logout_url': logout,
-            'user': user.nickname(),
-            'key': user_data_key.urlsafe(),
-            'samplename': ludo.sampleFilename,
-        }
-        self.response.out.write(template.render(template_vars))
+            # Checks for Quant session
+            session = SessionData.query(SessionData.user == user_id).get()
+            # If not, init a session
+            if not session:
+                a = -0.001348 
+                b =  0.352021 
+                session = SessionData(user=user_id,
+                                      email=user.nickname(),
+                                      qtarget = "Co",
+                                      qlambda=0,
+                                      available = phaselist.availablePhases,
+                                      selected = phaselist.defaultPhases,
+                                      fwhma = a,
+                                      fwhmb = b
+                )
+                session.put()
+            session.sampleBlob = self.request.get('file')
+            session.sampleFilename = self.request.params["file"].filename
+            user_data_key = session.put()
+            logging.debug(session.sampleFilename)
+            logging.debug(user_data_key)
+
+            # Generate image, returns results
+            angle, diff, bgpoly, calcdiff = dynamic_png(user_data_key)
+            csv = user_data_key.urlsafe()
+            template = JINJA_ENVIRONMENT.get_template('chart.html')
+            template_vars = {
+                'phaselist': session.results,
+                'angle': angle.tolist(),
+                'diff': diff.tolist(),
+                'bgpoly': bgpoly.tolist(),
+                'sum': calcdiff.tolist(),
+                'url_text': csv,
+                'key': user_data_key.urlsafe(),
+                'samplename': session.sampleFilename,
+            }
+            self.response.out.write(template.render(template_vars))
+        else:
+            logging.debug("No user -> need login")
+            self.redirect(users.create_login_url('/'))
+#            self.redirect(users.create_login_url(self.request.url))
 
 class FileUploadFormHandler(webapp2.RequestHandler):
     def get(self):
@@ -321,7 +335,7 @@ class FileUploadFormHandler(webapp2.RequestHandler):
             self.response.out.write(template.render(template_vars))
         else:
             logging.debug("No user -> need login")
-            self.redirect(users.create_login_url(self.request.uri))
+            self.redirect(users.create_login_url(self.request.url))
         
 class leave(webapp2.RequestHandler):
     def get(self):
