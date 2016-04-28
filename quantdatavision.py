@@ -66,35 +66,40 @@ class chemin(webapp2.RequestHandler):
         
 class CsvDownloadHandler(webapp2.RequestHandler):
   def get(self):
+    # Needs to be refactored server vs client csv generation - currently taking the user session results and dumping
+    user = users.get_current_user()
+    user_id = users.get_current_user().user_id()
+    session = SessionData.query(SessionData.user == user_id).get()
+
     url_string = self.request.get('key')
-    logging.debug(url_string)
-    logging.debug("Hello CSV")
-    user_key = ndb.Key(urlsafe=url_string)
-    user = user_key.get()
-    logging.debug(user.results)
+    # logging.debug(url_string)
+    # logging.debug("Hello CSV")
+    # user_key = ndb.Key(urlsafe=url_string)
+    # user = user_key.get()
+    logging.debug(session.results)
     self.response.headers['Content-Type'] = 'text/csv'
-    self.response.headers['Content-Disposition'] = 'attachment; filename=phaselist.csv'
+    self.response.headers['Content-Disposition'] = 'attachment; filename={}.csv'.format(session.sampleFilename)
     writer = csv.writer(self.response.out)
     writer.writerow(['Mineral','Mass %'])
-    writer.writerows(user.results)
+    writer.writerows(session.results)
 
 
 class crank(webapp2.RequestHandler):
     def get(self):
         user_id = users.get_current_user().user_id()
         logging.debug(user_id)
-        ludo = SessionData.query(SessionData.user == user_id).get()
-        user_data_key = ludo.key
+        session = SessionData.query(SessionData.user == user_id).get()
+        user_data_key = session.key
         logging.debug(user_data_key)
         angle, diff, bgpoly, calcdiff = dynamic_png(user_data_key)
 #        json_obj = {'angle': angle.tolist(), 'diff': diff.tolist(), 'bgpoly': bgpoly.tolist()}
         json_obj = {
-            "filename": ludo.sampleFilename,
+            "filename": session.sampleFilename,
             "angle": angle.tolist(),
             "diff": diff.tolist(),
             "bgpoly": bgpoly.tolist(),
             "calcdiff": calcdiff.tolist(),
-            "phases": ludo.results
+            "phases": session.results
             }
         # logging.debug(json.dumps(json_obj))
         self.response.out.write(json.dumps(json_obj))

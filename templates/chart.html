@@ -1,24 +1,33 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="page-header">
-  <h3>Diffraction Diagram</h3>
-</div>
 <div id="xrdplot" style="width:1200px;height:400px;"></div>
-  <table class="table table-bordered table-condensed" style="width: auto;">
-  <tr>
-    <th bgcolor="#DDDDDD">Mineral</th>
-    <th bgcolor="#DDDDDD">Mass %</th> 
-  </tr>
-  {%- for row in phaselist %}
-  <tr>
-  {%- for column in row %}
-    <td class="col-md-3">{{ column }}</td>
-  {%- endfor %}
-  </tr>
-{%- endfor %}
-</table>
-    <div><a href="/csv?key={{ url_text }}" type="button" class="btn btn-lg btn-success">Download CSV File</button></a></div>
-    <script>
+<div class="container">
+  <div class="row">
+    <div class="col-sm-4">
+    </div>
+    <div class="col-sm-4">
+      <table class="table table-bordered table-condensed" style="width: auto;">
+	<tr>
+	  <th bgcolor="#DDDDDD">Mineral</th>
+	  <th bgcolor="#DDDDDD">Mass %</th> 
+	</tr>
+	{%- for row in phaselist %}
+	<tr>
+	  {%- for column in row %}
+	  <td class="col-md-3">{{ column }}</td>
+	  {%- endfor %}
+	</tr>
+	{%- endfor %}
+      </table>
+    </div>
+    <div class="col-sm-4">
+      <div id="csvbutton" >
+	<a href="/csv?key={{ url_text }}" type="button" class="btn btn-xs btn-primary">Download CSV</button></a>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
     var list = {{ phaselist| safe }};
 var phases = '';
 for (var i = 0; i < list.length; i++) {
@@ -35,8 +44,9 @@ var trace1 = {
     line: {
 	color: 'rgb(128, 0, 0)',
 	width: 1
-    },
-    name: 'Data',
+		    },
+		    name: 'Data',
+		    hoverinfo: 'none'
 };
 
 var trace2 = {
@@ -46,7 +56,8 @@ var trace2 = {
     line: {
 	width: 1
     },
-    name: 'Background',
+		    name: 'Background',
+		    		    hoverinfo: 'none'
 };
 
 var trace3 = {
@@ -56,7 +67,8 @@ var trace3 = {
     line: {
 	width: 1
     },
-    name: 'Fit',
+		    name: 'Fit',
+		    		    hoverinfo: 'none'
 };
 
 var data = [trace1, trace2, trace3];

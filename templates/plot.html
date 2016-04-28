@@ -1,8 +1,5 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="page-header">
-  <h3>Diffraction Diagram</h3>
-</div>
 <div id="xrdplot" style="width:1200px;height:400px;"></div>
 <div class="container">
   <div class="row">
@@ -13,6 +10,9 @@
       </table>
     </div>
     <div class="col-sm-4">
+      <div id="csvbutton" >
+	<a href="/csv" type="button" class="btn btn-primary btn-xs">Download CSV</button></a>
+</div>
     </div>
   </div>
 </div>
@@ -34,7 +34,8 @@
   </div>
 </div>
 <script>
-$("#myModal").modal()
+$("#myModal").modal();
+$("#csvbutton").hide();
 $( document ).ready(function() {
     $.ajax({
 	url: "/crank",
@@ -57,7 +58,8 @@ function CreateTable(array)
     $.each(array, function (i, item) {
         trHTML += '<tr ><td class="col-md-3">' + item[0] + '</td><td class="col-md-3" align="right">' + item[1] + '</td></tr>';
     });
-    $('#phasetable').append(trHTML);
+$("#phasetable").append(trHTML);
+$("#csvbutton").show();
 }
 
 function DrawChart(arrays)
@@ -86,6 +88,7 @@ function DrawChart(arrays)
 	    width: 1
 	},
 	name: 'Data',
+		    hoverinfo: 'none'
     };
 
     var trace2 = {
@@ -96,6 +99,7 @@ function DrawChart(arrays)
 	    width: 1
 	},
 	name: 'Background',
+		    hoverinfo: 'none'
     };
 
     var trace3 = {
@@ -106,6 +110,7 @@ function DrawChart(arrays)
 	    width: 1
 	},
 	name: 'Fit',
+		    hoverinfo: 'none'
     };
 
     trace1.x = angle;
