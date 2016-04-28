@@ -94,9 +94,10 @@ class crank(webapp2.RequestHandler):
             "angle": angle.tolist(),
             "diff": diff.tolist(),
             "bgpoly": bgpoly.tolist(),
-            "calcdiff": calcdiff.tolist()
+            "calcdiff": calcdiff.tolist(),
+            "phases": ludo.results
             }
-        logging.debug(json.dumps(json_obj))
+        # logging.debug(json.dumps(json_obj))
         self.response.out.write(json.dumps(json_obj))
 
 class plotPage(webapp2.RequestHandler):
@@ -229,7 +230,7 @@ class handleCalibration(webapp2.RequestHandler):
         if b:
             session.fwhmb = float(b)
         session.put()
-        self.redirect('/')
+        self.redirect('/plot')
 
 class handlePhase(webapp2.RequestHandler):
     def post(self):
@@ -245,7 +246,7 @@ class handlePhase(webapp2.RequestHandler):
         session.selected = selectedlist
         session.available = availlist
         session.put()
-        self.redirect('/')
+        self.redirect('/plot')
     
 class processFile(webapp2.RequestHandler):
     def post(self):

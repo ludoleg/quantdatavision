@@ -1,42 +1,64 @@
 {% extends "base.html" %}
 {% block content %}
-<div id="tester" style="width:1200px;height:400px;"></div>
-<div class="dropdown">
-  <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-    Modes
-    <span class="caret"></span>
-  </button>
-  <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
-    <li><a href="#">Action</a></li>
-    <li><a href="#">Another action</a></li>
-    <li><a href="#">Something else here</a></li>
-    <li role="separator" class="divider"></li>
-    <li><a href="#">Separated link</a></li>
-  </ul>
+<div class="page-header">
+  <h3>Diffraction Diagram</h3>
+</div>
+<div id="xrdplot" style="width:1200px;height:400px;"></div>
+<div class="container">
+  <div class="row">
+    <div class="col-sm-4">
     </div>
-<div>
-<select onmousedown="this.value='';" onchange="jsFunction(this.value);">
-  <option value="1">Mode 1</option>
-  <option>Mode 2</option>
-  <option>Mode 3</option>
-</select>
+    <div class="col-sm-4">
+      <table class="table table-bordered table-condensed" style="width: auto;" id="phasetable">
+      </table>
     </div>
+    <div class="col-sm-4">
+    </div>
+  </div>
+</div>
+<!-- Modal -->
+<div class="modal fade bs-example-modal-sm" id="myModal" role="dialog">
+  <!-- Modal content-->
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+	<h4 class="modal-title">Processing...</h4>
+      </div>
+      <div class="modal-body">
+	<div class="progress progress-striped active">
+	  <div class="progress-bar progress-bar-info"  role="progressbar" style="width: 100%">
+	  </div>
+	</div>
+      </div>
+    </div>
+  </div>
+</div>
 <script>
-function jsFunction(value)
-{
-    alert(value);
-}
-
+$("#myModal").modal()
 $( document ).ready(function() {
-	$.ajax({
-	    url: "/crank",
-	    type: 'GET',
-	    dataType: 'json', // added data type
-	    success: function(arrays) {
-		DrawChart(arrays);  
-	    }
-	});
+    $.ajax({
+	url: "/crank",
+	type: 'GET',
+	dataType: 'json', // added data type
+	success: function(arrays) {
+	    DrawChart(arrays);
+	    console.log(arrays.phases);
+	    CreateTable(arrays.phases);
+	    $("#myModal").modal('hide')
+
+	}
     });
+});
+
+function CreateTable(array)
+{
+    var trHTML = '<tr><th bgcolor="#DDDDDD">Mineral</th><th bgcolor="#DDDDDD">Mass %</th></tr>';
+
+    $.each(array, function (i, item) {
+        trHTML += '<tr ><td class="col-md-3">' + item[0] + '</td><td class="col-md-3" align="right">' + item[1] + '</td></tr>';
+    });
+    $('#phasetable').append(trHTML);
+}
 
 function DrawChart(arrays)
 {
@@ -45,18 +67,17 @@ function DrawChart(arrays)
     var bgpoly = arrays.bgpoly;
     var calcdiff = arrays.calcdiff;
     var filename = arrays.filename;
+    var list = arrays.phases;
+
+    var phases = '';
+    for (var i = 0; i < list.length; i++) {
+	phases += list[i][0];
+	phases += ": ";
+	phases += list[i][1];
+	phases += "%<br>";
+    }
 
     var trace1 = {
-	x: null,
-	y: null,
-	mode: 'lines',
-	line: {
-	    width: 1
-	},
-	name: 'Diff',
-    };
-
-    var trace2 = {
 	x: null,
 	y: null,
 	mode: 'lines',
@@ -64,7 +85,17 @@ function DrawChart(arrays)
 	    color: 'rgb(128, 0, 0)',
 	    width: 1
 	},
-	name: 'BGpoly',
+	name: 'Data',
+    };
+
+    var trace2 = {
+	x: null,
+	y: null,
+	mode: 'lines',
+	line: {
+	    width: 1
+	},
+	name: 'Background',
     };
 
     var trace3 = {
@@ -74,7 +105,7 @@ function DrawChart(arrays)
 	line: {
 	    width: 1
 	},
-	name: 'Sum',
+	name: 'Fit',
     };
 
     trace1.x = angle;
@@ -87,6 +118,18 @@ function DrawChart(arrays)
     var data = [trace1, trace2, trace3];
     
     var layout = {
+	annotations: [
+	    {
+		x: 0.99,
+		y: 0.95,
+		xref: "paper",
+		yref: "paper",
+		text: phases,
+		showarrow: false,
+		bgcolor: 'rgba(160, 236, 133, 0.7)',
+		borderpad: 6,
+		align: 'right'
+	    }],
 	showlegend: true,
 	title: null,
 	xaxis: {
@@ -119,7 +162,7 @@ function DrawChart(arrays)
 
     layout.title = filename;
     
-    Plotly.plot(document.getElementById('tester'), data, layout);
+    Plotly.plot(document.getElementById('xrdplot'), data, layout);
 }
 </script>
 {% endblock %}

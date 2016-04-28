@@ -1,21 +1,18 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="page-header">
-  <h2>Diffraction Diagram</h2>
+  <h3>Diffraction Diagram</h3>
 </div>
-<p>
-  <div id="xrdplot" style="width:1200px;height:400px;"></div>
-</p>
-<h2>Phases</h2>
-<table class="table">
+<div id="xrdplot" style="width:1200px;height:400px;"></div>
+  <table class="table table-bordered table-condensed" style="width: auto;">
   <tr>
-    <th>Mineral</th>
-    <th>Mass %</th> 
+    <th bgcolor="#DDDDDD">Mineral</th>
+    <th bgcolor="#DDDDDD">Mass %</th> 
   </tr>
   {%- for row in phaselist %}
   <tr>
   {%- for column in row %}
-    <td>{{ column }}</td>
+    <td class="col-md-3">{{ column }}</td>
   {%- endfor %}
   </tr>
 {%- endfor %}
