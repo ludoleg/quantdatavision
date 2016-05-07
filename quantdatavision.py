@@ -13,6 +13,7 @@ import jinja2
 
 # Applications modules
 import chart
+from logics import QuantMode, QuantModeModel
 from models.session import SessionData
 
 import phaselist
@@ -185,36 +186,41 @@ class setCalibration(webapp2.RequestHandler):
 
 class modes(webapp2.RequestHandler):
     def get(self):
+        mode = QuantMode()
+        logging.debug(mode)
+        mode.whoami()
         logging.debug("Modes")
-        user = users.get_current_user()
-        if user:
-            user_id = users.get_current_user().user_id() 
-            session = SessionData.query(SessionData.user == user_id).get()
-            if not session:
-                a = -0.001348 
-                b =  0.352021 
-                session = SessionData(user=user_id,
-                                      email=user.nickname(),
-                                      qtarget = "Co",
-                                      qlambda = 0,
-                                      available = phaselist.availablePhases,
-                                      selected = phaselist.defaultPhases,
-                                      fwhma = a,
-                                      fwhmb = b
-                )
-                session.put()
-            # logging.debug(session)
-            template = JINJA_ENVIRONMENT.get_template('modes.html')
-            template_vars = {
-                'lambda': session.qlambda,
-                'target': session.qtarget,
-                'a': session.fwhma,
-                'b': session.fwhmb,
-            }
-            self.response.out.write(template.render(template_vars))
-        else:
-            logging.info("No user -> need login")
-            self.redirect(users.create_login_url(self.request.url))
+        template_vars = {'modes' : mode.list_mode()}
+        template = JINJA_ENVIRONMENT.get_template('modes.html')
+        self.response.out.write(template.render(template_vars))
+
+class database(webapp2.RequestHandler):
+    def get(self):
+        logging.debug("NDB debug")
+        query = QuantModeModel.query()
+        getKey = query.get()
+        logging.debug(getKey)
+        logging.debug(getKey.key.urlsafe())
+
+        mode = QuantModeModel.query(QuantModeModel.qtarget=='Co').get()
+        logging.debug(mode.key.id())
+
+        ludo = QuantModeModel.get_by_id("Cameron")
+        logging.debug(ludo)
+
+        user_id = users.get_current_user().user_id()
+        session = SessionData.query(SessionData.user == user_id).get()
+        user_data_key = session.key
+        #get ID of entity Key
+        qmode_key = ndb.Key(QuantModeModel, 'cameron', parent=session.key)
+        qmode = qmode_key.get()
+
+        # qmode_key = ndb.Key(QuantModeModel, 'Cameron')
+        # key = Key(QuantModeModel, 'Cameron').get()
+        logging.debug(qmode)
+        
+        self.response.out.write('Done')
+
         
 class handleCalibration(webapp2.RequestHandler):
     def post(self):
@@ -359,7 +365,63 @@ class isLogged(webapp2.RequestHandler):
         self.response.write(json.dumps(username))
         
 # logging.getLogger().setLevel(logging.DEBUG)
+
+class ModesCreateHandler(webapp2.RequestHandler):
+    def get(self):
+        user = users.get_current_user()
+        if user:
+            template = JINJA_ENVIRONMENT.get_template('modesCreate.html')
+            self.response.out.write(template.render())
+        else:
+            self.redirect(users.create_login_url(self.request.uri))
+    def post(self):
+        #get all input values
+        qtarget = self.request.get('target').strip()
+        qlambda = self.request.get('lambda').strip()
+        fwhma = self.request.get('fwhma').strip()
+        fwhmb = self.request.get('fwhmb').strip()
+        qname = self.request.get('modeName').strip()
         
+        mode = QuantMode()
+        mode.save_mode(qname ,qtarget, float(qlambda), float(fwhma), float(fwhmb), 0)
+        self.redirect('/modes')
+
+
+class ModesEditHandler(webapp2.RequestHandler):
+    def get (self):
+        user = users.get_current_user()
+        if user:
+            user_id = users.get_current_user().user_id()
+            session = SessionData.query(SessionData.user == user_id).get()
+            user_data_key = session.key
+            #get ID of entity Key
+            logging.debug(self.request.get('id'))
+            qmode_key = ndb.Key(QuantModeModel, self.request.get('id'), parent=session.key)
+            qmode = qmode_key.get()
+            
+            logging.debug("Edit Modes")
+            logging.debug(qmode.qlambda)
+            template_values = {'mode' : qmode}
+            template = JINJA_ENVIRONMENT.get_template('modesEdit.html')
+            self.response.out.write(template.render(template_values))
+        else:
+            self.redirect(users.create_login_url(self.request.uri))
+    def post(self):
+        #get all input values
+        input_id = self.request.get('id')
+        logging.debug(input_id)
+        input_qtarget = self.request.get('target').strip()
+        input_qlambda = self.request.get('lambda').strip()
+        logging.debug(input_qlambda)
+        input_fwhma = self.request.get('fwhma').strip()
+        logging.debug(input_fwhma)
+        input_fwhmb = self.request.get('fwhmb').strip()
+        logging.debug(input_fwhmb)
+
+        mode = QuantMode()
+        mode.save_mode(input_id,input_qtarget, float(input_qlambda), float(input_fwhma), float(input_fwhmb), input_id)
+        self.redirect('/modes')
+
 ## Here is the WSGI application instance that routes requests
 app = webapp2.WSGIApplication([
     ('/phase', setPhase),
@@ -376,7 +438,10 @@ app = webapp2.WSGIApplication([
     ('/process', processFile),
     ('/upload_form', FileUploadFormHandler ),
     ('/isLogged', isLogged ),
+    ('/modes/create', ModesCreateHandler),
+    ('/modes/edit', ModesEditHandler),
     ('/leave', leave ),
+    ('/ndb', database ),
     ('/', ShowHome),
 ], debug=True)
 

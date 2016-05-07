@@ -1,50 +1,49 @@
 {% extends "base.html" %}
+{% block title %}Modes{% endblock %}
 {% block content %}
-<div class="page-header">
-  <h1>Manage Modes</h1>
-</div>
-<form action="/saveCal"
-      method="POST"
-      enctype="multipart/form-data"
-      >
-  <div class="container">
-    <div class="row">
-      <div class="form-group col-xs-3">
-	<label for="lambda">Lambda (Å): </label>
-	<input type="text" class="form-control" name="lambda" value="{{ lambda }}">
-      </div>
-    </div>
-    <div class="row">
-      <div class="form-group col-xs-3">
-	<label for="target">Select Target:</label>
-	<select class="form-control" name="target">
-	  {% if target == "Cu" %}
-	  <option selected>Cu</option>
-	  <option>Co</option>
-	  {% else %}
-	  <option>Cu</option>
-	  <option selected>Co</option>
-	  {% endif %}
-	</select>
-      </div>
-    </div>
-    <div class="row">
-      <div class="form-group col-xs-3">
-	<label for="a"> FWHMa: </label>
-	<input type="text" class="form-control" name="fwhma" value="{{ a }}">
-      </div>
-      <div class="form-group col-xs-3">
-	<label for="b"> FWHMb: </label>
-	<input type="text" class="form-control" name="fwhmb" value="{{ b }}">
-      </div>
-    </div>
-    <hr>
-    <div class="row">
-      <div class="col-xs-3">
-	<button type="submit" class="btn btn-primary">Save Parameters</button>
-      </div>
-    </div>
-  </div>
-</form>
+            <div class="page-header">
+                <h3>Analysis Modes</h3>
+            </div>
+            <form id="mode-list" class="form-horizontal" role="form" method="post" action="/">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        Modes
+                    </div>
+                    <div class="panel-body">
+                        <a href="/modes/create" class="btn btn-success">Create</a>
+                        <input type="submit" class="btn btn-danger" name="delete" value="Delete">
+                        <table class="table table-hover ">
+                            <thead>
+                                <tr>
+                                    <th></th>
+				    <th class="col-md-2">Name</th>
+				    <th class="col-md-2">Target</th>
+                                    <th class="col-md-2">Lambda</th>
+                                    <th class="col-md-2">FWHMA</th>
+                                    <th class="col-md-2">FWHMB</th>
+                                    <th class="col-md-1">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for mode in modes %}
+                                <tr>
+                                    <td><input type="checkbox" name="mode_id" value="{{mode.key.id()}}"></td>
+                                    <td>{{ mode.key.id() }}</td>
+                                    <td>{{ mode.qtarget }}</td>
+                                    <td>{{ mode.qlambda }}</td>
+                                    <td>{{ mode.fwhma }}</td>
+                                    <td>{{ mode.fwhmb }}</td>
+                                    <!-- get numeric ID of entity key -->
+                                    <td><a href="/modes/edit?id={{mode.key.id()}}">Edit</a></td>
+                                </tr>
+                                {% else %}
+                                    <tr>
+                                        <td colspan="9">No Mode Found</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </form>
 {% endblock %}
-

@@ -13,3 +13,4 @@ class SessionData(ndb.Model):
     qtarget = ndb.StringProperty()
     fwhma = ndb.FloatProperty()
     fwhmb = ndb.FloatProperty()
+#     modes = ndb.StructuredProperty(Mode, repeated=True)
