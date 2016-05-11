@@ -184,19 +184,14 @@ class setCalibration(webapp2.RequestHandler):
             logging.info("No user -> need login")
             self.redirect(users.create_login_url(self.request.url))
 
-class modes(webapp2.RequestHandler):
-    def get(self):
-        mode = QuantMode()
-        logging.debug(mode)
-        mode.whoami()
-        logging.debug("Modes")
-        template_vars = {'modes' : mode.list_mode()}
-        template = JINJA_ENVIRONMENT.get_template('modes.html')
-        self.response.out.write(template.render(template_vars))
 
 class database(webapp2.RequestHandler):
     def get(self):
+        user_id = users.get_current_user().user_id()
+        session = SessionData.query(SessionData.user == user_id).get()
         logging.debug("NDB debug")
+        logging.debug(user_id)
+        logging.debug(session)
         query = QuantModeModel.query()
         getKey = query.get()
         logging.debug(getKey)
@@ -206,6 +201,7 @@ class database(webapp2.RequestHandler):
         logging.debug(mode.key.id())
 
         ludo = QuantModeModel.get_by_id("Cameron")
+
         logging.debug(ludo)
 
         user_id = users.get_current_user().user_id()
@@ -365,8 +361,45 @@ class isLogged(webapp2.RequestHandler):
         self.response.write(json.dumps(username))
         
 # logging.getLogger().setLevel(logging.DEBUG)
+class modes(webapp2.RequestHandler):
+    def get(self):
+        user = users.get_current_user()
+        if user:
+            user_id = users.get_current_user().user_id() 
+            session = SessionData.query(SessionData.user == user_id).get()
+            if not session:
+                a = -0.001348 
+                b =  0.352021 
+                session = SessionData(user=user_id,
+                                      email=user.nickname(),
+                                      qtarget = "Co",
+                                      qlambda = 0,
+                                      available = phaselist.availablePhases,
+                                      selected = phaselist.defaultPhases,
+                                      fwhma = a,
+                                      fwhmb = b
+                )
+                session.put()
+            # logging.debug(session)
+            mode = QuantMode()
+            template_vars = {'modes' : mode.list_mode()}
+            template = JINJA_ENVIRONMENT.get_template('modes.html')
+            self.response.out.write(template.render(template_vars))
+        else:
+            logging.info("No user -> need login")
+            self.redirect(users.create_login_url(self.request.url))
+    def post(self):
+        user = users.get_current_user()
+        if user:
+            if self.request.POST.get('delete'): #if user clicks "Delete" button
+                modes_ids = self.request.get_all('mode_id')
+                mode = QuantMode()
+                mode.delete_mode(modes_ids)
+                self.redirect('/modes')
 
+            
 class ModesCreateHandler(webapp2.RequestHandler):
+    logging.debug("Create Modes")
     def get(self):
         user = users.get_current_user()
         if user:
@@ -385,7 +418,6 @@ class ModesCreateHandler(webapp2.RequestHandler):
         mode = QuantMode()
         mode.save_mode(qname ,qtarget, float(qlambda), float(fwhma), float(fwhmb), 0)
         self.redirect('/modes')
-
 
 class ModesEditHandler(webapp2.RequestHandler):
     def get (self):

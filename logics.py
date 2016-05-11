@@ -22,8 +22,8 @@ class QuantMode(object):
                 logging.info("I am a QuantMode instance")        
         def save_mode (self,qname,qtarget,qlambda,a,b,input_id):
 		#id will be greater than zero when EDIT action is triggered.
-		if id>0:
-                        user_id = users.get_current_user().user_id()
+                user_id = users.get_current_user().user_id()
+		if input_id>0:
                         session = SessionData.query(SessionData.user == user_id).get()
                         user_data_key = session.key
                         #get ID of entity Key
@@ -48,8 +48,6 @@ class QuantMode(object):
 
                         # Get session data instance
                         user = users.get_current_user()
-                        user_id = users.get_current_user().user_id()
-                        user_id = users.get_current_user().user_id()
                         logging.debug(user_id)
                         session = SessionData.query(SessionData.user == user_id).get()
                         user_data_key = session.key
@@ -66,20 +64,28 @@ class QuantMode(object):
 
 	def delete_mode (self, mode_ids):
 		if len(mode_ids)>0:
-			for mode_id in mode_ids:
-				qmode_k = ndb.Key('CompanyModel','RedRock','QuantModeModel',long(employee_id))
-				qmode = db.get(qmode_k)
-				db.delete(qmode_k)
+                        user_id = users.get_current_user().user_id() 
+                        session = SessionData.query(SessionData.user == user_id).get()
 
+			for mode_id in mode_ids:
+                                logging.debug(mode_id)
+				qmode_k = ndb.Key('QuantModeModel', mode_id, parent=session.key)
+                                logging.debug(qmode_k)
+				#qmode = db.get(qmode_k)
+				qmode = qmode_k.get()
+                                logging.debug(qmode)
+				# db.delete(qmode_k)
+                                qmode_k.delete()
 	def list_mode (self):
                 user = users.get_current_user()
                 user_id = users.get_current_user().user_id()
-                user_id = users.get_current_user().user_id()
                 logging.debug(user_id)
                 session = SessionData.query(SessionData.user == user_id).get()
+                logging.debug("Not sure")
+                logging.debug(session)
+                
                 user_data_key = session.key
                 
-                logging.debug("Not sure")
 		mode_query = QuantModeModel.query()
                 logging.debug(mode_query)
                 mode_query = QuantModeModel.query(ancestor=session.key)
