@@ -18,11 +18,21 @@ def GenerateChart(obj_key):
     # Logic with simple file upload
     filename = session.sampleFilename
 
+    mode_key = session.currentMode
+    logging.debug(mode_key)
+    mode = mode_key.get()
+    logging.debug(mode.title)
+    logging.debug(mode.qlambda)
+
     # Calibration parameters
-    Lambda = session.qlambda
-    Target = session.qtarget
-    FWHMa = session.fwhma
-    FWHMb = session.fwhmb
+    # Lambda = session.qlambda
+    # Target = session.qtarget
+    # FWHMa = session.fwhma
+    # FWHMb = session.fwhmb
+    Lambda = mode.qlambda
+    Target = mode.qtarget
+    FWHMa = mode.fwhma
+    FWHMb = mode.fwhmb
     
     if(Lambda > 2.2 or Lambda == 0):
         Lambda = ''
@@ -30,6 +40,8 @@ def GenerateChart(obj_key):
     logging.debug("Filename: {}".format(filename))
     logging.debug("Target: %s", Target)
     logging.debug("Lambda: %s", Lambda)
+    logging.debug("Fa: %d", FWHMa)
+    logging.debug("Fb: %d", FWHMb)
     # Logic to parse correct file
     
     # Logic with simple file upload
