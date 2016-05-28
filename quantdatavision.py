@@ -201,37 +201,25 @@ class database(webapp2.RequestHandler):
                 session = SessionData(user=user_id,
                                       email=user.nickname()
                 )
-                mode = QuantModeModel()
+                mode = QuantModeModel(parent=session.key)
                 key = mode.put()
                 logging.debug(key)
-                session.modes.append(key)
+                session.currentMode = key
                 session.put()
                 logging.debug(session)
 
-            logging.debug(session.modes) # List of keys - modes
+            modes = QuantModeModel.query(ancestor=session.key)
 
-            for k in session.modes:
-                logging.debug(k.urlsafe())
+            for m in modes:
+                logging.debug(m)
 
-            kkk_id = session.modes[0].id()
-            logging.debug(kkk_id)
+            #key_to_delete = ndb.Key(QuantModeModel, kkk_id)
 
-            key_to_delete = ndb.Key(QuantModeModel, kkk_id)
-            logging.debug(key_to_delete)
-
-            if key_to_delete in session.modes:
-                idx = session.modes.index(key_to_delete)
-                del session.modes[idx]
-                session.put()
-                
-            list_of_modes = ndb.get_multi(session.modes) # List of mode objects
-            logging.debug(list_of_modes)
-
-            for m in list_of_modes:
+#            for m in list_of_modes:
                 # logging.debug("Mode key id: %s", m.key.id());
                 # logging.debug("Mode title: %s", m.title);
                 # logging.debug("Mode key: %s", m.key.urlsafe());
-                logging.debug(m.key.urlsafe)
+ #               logging.debug(m.key.urlsafe)
                 
             # query = QuantModeModel.query()
             # getKey = query.get()
@@ -315,27 +303,27 @@ class processFile(webapp2.RequestHandler):
             session = SessionData.query(SessionData.user == user_id).get()
             # If not, init a session
             if not session:
-                a = -0.001348 
-                b =  0.352021 
                 session = SessionData(user=user_id,
-                                      email=user.nickname(),
-                                      qtarget = "Co",
-                                      qlambda=0,
-                                      available = phaselist.availablePhases,
-                                      selected = phaselist.defaultPhases,
-                                      fwhma = a,
-                                      fwhmb = b
+                                      email=user.nickname()
                 )
                 session.put()
             session.sampleBlob = self.request.get('file')
             session.sampleFilename = self.request.params["file"].filename
-            user_data_key = session.put()
+            session_data_key = session.put()
             logging.debug(session.sampleFilename)
-            logging.debug(user_data_key)
+            logging.debug(session_data_key)
 
+            # query modes
+            modes = QuantModeModel.query(ancestor=session.key)
+
+            for m in modes:
+                logging.debug(m.title)
+
+            mode = session.currentMode.get().title
+                
             # Generate image, returns results
-            angle, diff, bgpoly, calcdiff = dynamic_png(user_data_key)
-            csv = user_data_key.urlsafe()
+            angle, diff, bgpoly, calcdiff = dynamic_png(session_data_key)
+            csv = session_data_key.urlsafe()
             template = JINJA_ENVIRONMENT.get_template('chart.html')
             template_vars = {
                 'phaselist': session.results,
@@ -344,8 +332,9 @@ class processFile(webapp2.RequestHandler):
                 'bgpoly': bgpoly.tolist(),
                 'sum': calcdiff.tolist(),
                 'url_text': csv,
-                'key': user_data_key.urlsafe(),
+                'key': session_data_key.urlsafe(),
                 'samplename': session.sampleFilename,
+                'mode': mode
             }
             self.response.out.write(template.render(template_vars))
         else:
@@ -468,6 +457,7 @@ class ModesCreateHandler(webapp2.RequestHandler):
         fwhma = self.request.get('fwhma').strip()
         fwhmb = self.request.get('fwhmb').strip()
         title = self.request.get('modeTitle').strip()
+        minddb = self.request.get('mindb').strip()
         
         # mode = QuantModeModel(title=title,
         #                       qlambda=float(qlambda),
@@ -489,7 +479,7 @@ class ModesCreateHandler(webapp2.RequestHandler):
         # logging.debug(session)
 
         mode = QuantMode()
-        mode.save_mode(title ,qtarget, float(qlambda), float(fwhma), float(fwhmb), 0)
+        mode.save_mode(title ,qtarget, float(qlambda), float(fwhma), float(fwhmb), mindb, 0)
         self.redirect('/modes')
 
         

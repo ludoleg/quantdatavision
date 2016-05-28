@@ -13,7 +13,7 @@ def GenerateChart(obj_key):
     ##############################################################################
     logging.info("Start with processing...")
     session = obj_key.get()
-    # logging.debug(session)
+    logging.debug(session)
 
     # Logic with simple file upload
     filename = session.sampleFilename
@@ -50,7 +50,8 @@ def GenerateChart(obj_key):
     
     phaselistname = 'phaselist.csv'
     phaselist = open(phaselistname, 'r').readlines()
-    selectedPhases = session.selected
+    mode = session.currentMode.get()
+    selectedPhases = mode.selected
     
     DBname = "reduced_difdata.txt"
     difdata = open(DBname, 'r').readlines()
