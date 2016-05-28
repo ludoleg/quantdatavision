@@ -1,7 +1,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-def overplotgraph(angle,diff,BGpoly,Sum, graphlist,filename):
+def overplotgraph(userdata,BGpoly,Sum, graphlist,filename):
+    angle, diff = userdata
+    angle = np.array(angle)
+    diff = np.array(diff)
     fig = plt.figure(figsize=(15,5)) 
     plt.plot(angle, diff, linestyle="solid",  color="black")
     fig.patch.set_facecolor('white')

@@ -195,6 +195,48 @@ def getLambdafromTarget(Target):
     else : logging.info( 'ERROR: Tube target material unknown')
     return Lambda
 
+def makephaselist(difdata):
+    """"
+    makes inventory of phase present in difdata and associated AMCSD codes.
+    """
+    
+    limits_nameorder = []
+    nameline = True
+    name = []
+    code = []
+    Imax = []
+
+    # loop bellow find the line positions of each beginning and end of difdata.txt
+    for i in range(0, len(difdata)):
+        iv2=0
+        Vcell=0
+        line = difdata[i]
+        if nameline:
+            namelinenum = i
+            name.append((line[6:-1]))
+            nameline = False
+        elif ("database_code_amcsd") in line:
+            code.append((line[27:-1]))
+        '''
+        elif ("MAX. ABS. INTENSITY / VOLUME**2:") in line:
+            iv2=float(line[44:-1])
+        elif ("CELL PARAMETERS:") in line:
+                    cellparamline = line[24:len(line)-1]
+                    cellparam = [float(n) for n in cellparamline.split()]
+                    for k in range(3,6):
+                        cellparam[k] *=pi/180
+                    Vcell = cellparam[0] * cellparam[1] *cellparam[2] * (1- (cos(cellparam[3]))**2 - (cos(cellparam[4]))**2 - (cos(cellparam[5]))**2 + 2 * cos(cellparam[3]) * cos(cellparam[4]) * cos(cellparam[5]))**0.5
+        if iv2 > 0 and Vcell > 0:
+                Imax = (iv2*Vcell)                    
+        '''        
+        elif "_END_" in line:
+            endline = i
+            nameline = True
+
+
+    phaselist = (name, code)# Imax/Icor)
+    return phaselist
+
 
 def makeDB(difdata, mineral, enable, Lambda):
     """"
