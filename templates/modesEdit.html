@@ -44,6 +44,17 @@
                               <input type="text" class="form-control" id="fwhmb" name="fwhmb" value="{{mode.fwhmb}}" required />
                             </div>
                         </div>
+                        <div class="form-group">
+			  <label class="col-lg-2 control-label" for="">Inventory</label>
+                            <div class="col-lg-4">
+                                <select id="class" class="form-control" name="inventory">
+                                    <option {% if mode.inventory == 'cement' %}selected{% endif %}>Cement</option>
+                                    <option {% if mode.inventory == 'rockforming' %}selected{% endif %}>Rock Forming</option>
+                                    <option {% if mode.inventory == 'pigment' %}selected{% endif %}>Pigment</option>
+                                    <option {% if mode.inventory == 'chemin' %}selected{% endif %}>Chemin</option>
+                                </select>
+                            </div>                    
+                        </div>
 
                         <div class="form-group">
                             <div class="col-lg-offset-2 col-lg-4">

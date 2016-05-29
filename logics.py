@@ -15,12 +15,12 @@ class QuantModeModel(ndb.Model):
         qtarget = ndb.StringProperty(default="Co")
         fwhma = ndb.FloatProperty(default=-0.001348)
         fwhmb = ndb.FloatProperty(default=0.352021)
-        mineral = ndb.StringProperty(default="Argiles")
+        inventory = ndb.StringProperty(default="cement")
 
 class QuantMode(object):
         def whoami(self):
                 logging.info("I am a QuantMode instance")        
-        def save_mode (self,qname,qtarget,qlambda,a,b,mindb,input_id):
+        def save_mode (self,qname,qtarget,qlambda,a,b,inventory,input_id):
 		#id will be greater than zero when EDIT action is triggered.
                 user_id = users.get_current_user().user_id()
 		if input_id>0:
@@ -58,7 +58,7 @@ class QuantMode(object):
 		qmode.qtarget = qtarget
 		qmode.fwhma = a
 		qmode.fwhmb = b
-                qmode.mineral = mindb
+                qmode.inventory = inventory
                 
                 #		qmode.user_name = users.get_current_user().email()
 		key = qmode.put()

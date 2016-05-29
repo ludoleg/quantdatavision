@@ -3,8 +3,9 @@ import logging
 import StringIO
 from PIL import Image
 
+import qxrd
 import qxrdtools
-import conductor
+# import conductor
 import graphit
     
 def GenerateChart(obj_key):
@@ -21,8 +22,26 @@ def GenerateChart(obj_key):
     mode_key = session.currentMode
     logging.debug(mode_key)
     mode = mode_key.get()
+
+    # Unpack the selected inventory
     logging.debug(mode.title)
     logging.debug(mode.qlambda)
+    logging.debug(mode.inventory)
+
+    if mode.inventory == "cement":
+        phaselistname = 'difdata_cement_inventory.csv'
+        DBname ='difdata_cement.txt'
+    elif mode.inventory == "pigment":
+        phaselistname = 'difdata_pigment_inventory.csv'
+        DBname ='difdata_pigment.txt'
+    elif mode.inventory == "rockforming":
+        phaselistname = 'difdata-rockforming_inventory.csv'
+        DBname ='difdata-rockforming.txt'
+    elif mode.inventory == "chemin":
+        phaselistname = 'difdata_CheMin_inventory.csv'
+        DBname ='difdata_CheMin.txt'
+    else:
+        logging.debug("Can't find inventory")
 
     # Calibration parameters
     # Lambda = session.qlambda
@@ -48,37 +67,56 @@ def GenerateChart(obj_key):
     XRDdata = StringIO.StringIO(session.sampleBlob)
     logging.debug(XRDdata)
     
-    phaselistname = 'phaselist.csv'
+    # phaselistname = 'phaselist.csv'
     phaselist = open(phaselistname, 'r').readlines()
     mode = session.currentMode.get()
     selectedPhases = mode.selected
     
-    DBname = "reduced_difdata.txt"
+    # DBname = "reduced_difdata.txt"
     difdata = open(DBname, 'r').readlines()
 
     # logging.debug(XRDdata)
     logging.info("Start Quant.phase...")
     
     rv_plot = StringIO.StringIO()
-    twoT, diff = qxrdtools.openXRD(XRDdata, filename)
+    # twoT, diff = qxrdtools.openXRD(XRDdata, filename)
 
-    results, BG, calcdiff =      conductor.Qanalyze(twoT, diff ,difdata, phaselist, selectedPhases, Lambda, Target, FWHMa, FWHMb)
-    rv_plot = graphit.overplotgraph(twoT,diff,BG,calcdiff, results[0:min(10,len(results))], filename)
+    # 
+    userData = qxrdtools.openXRD(XRDdata, filename)
+    # logging.debug(userData)
+
+    InstrParams = {"Lambda": 0, "Target": '', "FWHMa": -0.001348, "FWHMb": 0.352021}
+
+    # Dif data captures all cristallographic data
+    selectedphases = []
+    for i in range (1, len(phaselist)):
+        name, code = phaselist[i].split('\t')
+        code = int(code)
+        selectedphases.append((name,code))
+
+    results, BG, calcdiff = qxrd.Qanalyze(userData, difdata, selectedphases, InstrParams)
+
+    # results, BG, calcdiff =      conductor.Qanalyze(twoT, diff ,difdata, phaselist, selectedPhases, Lambda, Target, FWHMa, FWHMb)
+
+    # rv_plot = graphit.overplotgraph(twoT,diff,BG,calcdiff, results[0:min(10,len(results))], filename)
     
-    rv_plot.seek(0)
-    image = Image.open(rv_plot)
-    width, height = image.size
+    # rv_plot.seek(0)
+    # image = Image.open(rv_plot)
+    # width, height = image.size
     # logging.info("w: {} h: {}".format(width, height))
-    session.avatar = rv_plot.getvalue()
+    # session.avatar = rv_plot.getvalue()
     
     # session.selected = results
     session.results = results
     session.put()
-    # logging.debug(session)
+    logging.debug(results)
 
     logging.debug(results)
     logging.info("Done with processing")
 
+    twoT = userData[0]
+    diff = userData[1]
+    
     return twoT, diff, BG, calcdiff
 
     # This scaling code does not seem to work??

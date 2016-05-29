@@ -28,7 +28,6 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 def dynamic_png(key):
     # rv = StringIO.StringIO()
     twoT, diff, bgpoly, calcdiff = chart.GenerateChart(key)
-    # logging.debug(rv)
     return twoT, diff, bgpoly, calcdiff
 # return """<img src="data:image/png;base64,%s"/>""" % rv.getvalue().encode("base64").strip()
 
@@ -319,7 +318,7 @@ class processFile(webapp2.RequestHandler):
             for m in modes:
                 logging.debug(m.title)
 
-            mode = session.currentMode.get().title
+            mode = session.currentMode.get()
                 
             # Generate image, returns results
             angle, diff, bgpoly, calcdiff = dynamic_png(session_data_key)
@@ -393,6 +392,7 @@ class isLogged(webapp2.RequestHandler):
         self.response.write(json.dumps(username))
         
 # logging.getLogger().setLevel(logging.DEBUG)
+
 class Modes(webapp2.RequestHandler):
     def get(self):
         logging.debug("Modes")
@@ -435,7 +435,9 @@ class Modes(webapp2.RequestHandler):
         user = users.get_current_user()
         if user:
             if self.request.POST.get('delete'): #if user clicks "Delete" button
+                #Sending back the key id from the modes to be deleted
                 modes_ids = self.request.get_all('mode_id')
+                logging.debug(modes_ids)
                 mode = QuantMode()
                 mode.delete_mode(modes_ids)
                 self.redirect('/modes')
@@ -457,7 +459,7 @@ class ModesCreateHandler(webapp2.RequestHandler):
         fwhma = self.request.get('fwhma').strip()
         fwhmb = self.request.get('fwhmb').strip()
         title = self.request.get('modeTitle').strip()
-        minddb = self.request.get('mindb').strip()
+        inventory = self.request.get('inventory').strip()
         
         # mode = QuantModeModel(title=title,
         #                       qlambda=float(qlambda),
@@ -479,9 +481,55 @@ class ModesCreateHandler(webapp2.RequestHandler):
         # logging.debug(session)
 
         mode = QuantMode()
-        mode.save_mode(title ,qtarget, float(qlambda), float(fwhma), float(fwhmb), mindb, 0)
+        mode.save_mode(title ,qtarget, float(qlambda), float(fwhma), float(fwhmb), inventory, 0)
         self.redirect('/modes')
 
+        
+class defaultMode(webapp2.RequestHandler):
+    def get (self):
+        logging.debug("Default Mode")
+        logging.debug("Modes")
+        user = users.get_current_user()
+        if user:
+            user_id = users.get_current_user().user_id() 
+            session = SessionData.query(SessionData.user == user_id).get()
+            logging.debug("session")
+            if not session:
+                 session = SessionData(user=user_id,
+                                      email=user.nickname(),
+                 )
+                 session.put()
+            logging.debug(session)
+
+            # list_of_modes = ndb.get_multi(session.modes)
+            # logging.debug(list_of_modes)
+            # for k in list_of_modes:
+            #     logging.debug(k.title)
+            # logging.debug(len(list_of_modes))
+            # for m in list_of_modes:
+            #     logging.debug(m)
+
+            mode = QuantMode()
+            list = mode.list_mode()
+            
+            template_vars = {'modes' : mode.list_mode()            }
+            template = JINJA_ENVIRONMENT.get_template('default.html')
+            self.response.out.write(template.render(template_vars))
+        else:
+            logging.info("No user -> need login")
+            self.redirect(users.create_login_url(self.request.url))
+    def post(self):
+        #get all input values
+        user_id = users.get_current_user().user_id() 
+        session = SessionData.query(SessionData.user == user_id).get()
+        default_mode = self.request.get('mode').strip()
+        logging.debug(default_mode)
+
+        qmode_k = ndb.Key('QuantModeModel', int(default_mode), parent=session.key)
+        logging.debug(qmode_k)
+        session.currentMode = qmode_k
+        session.put()
+        self.redirect('/')
         
 class ModesEditHandler(webapp2.RequestHandler):
     def get (self):
@@ -516,9 +564,11 @@ class ModesEditHandler(webapp2.RequestHandler):
         logging.debug(input_fwhma)
         input_fwhmb = self.request.get('fwhmb').strip()
         logging.debug(input_fwhmb)
+        input_inventory = self.request.get('inventory').strip()
+        logging.debug(input_inventory)
 
         mode = QuantMode()
-        mode.save_mode(0, input_qtarget, float(input_qlambda), float(input_fwhma), float(input_fwhmb), int(mode_key_id))
+        mode.save_mode(0, input_qtarget, float(input_qlambda), float(input_fwhma), float(input_fwhmb), input_inventory, int(mode_key_id))
         self.redirect('/modes')
 
 ## Here is the WSGI application instance that routes requests
@@ -539,6 +589,7 @@ app = webapp2.WSGIApplication([
     ('/isLogged', isLogged ),
     ('/modes/create', ModesCreateHandler),
     ('/modes/edit', ModesEditHandler),
+    ('/default', defaultMode),
     ('/leave', leave ),
     ('/ndb', database ),
     ('/', ShowHome),
