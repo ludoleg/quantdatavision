@@ -26,7 +26,7 @@ def overplotgraph(userdata,BGpoly,Sum, graphlist,filename):
     plt.plot(angle, difference+offset, linestyle="solid", color="pink")
     plt.plot(angle, offsetline, linestyle="dotted", color="red")
     textposleft = xmin+(xmax-xmin)/50
-    percentpos = xmin+(xmax-xmin)/5
+    percentpos = xmin+(xmax-xmin)/50*12
     FOMpos = xmax-(xmax-xmin)/50
     FOM = sum(abs(diff-Sum))/len(diff)
     plt.text(textposleft, offset/10*12, filename, fontsize=12, color="black")
@@ -34,10 +34,11 @@ def overplotgraph(userdata,BGpoly,Sum, graphlist,filename):
     vertpos = offset/10*9
     for i in range(0,len(graphlist)):
         minname = graphlist[i][0]
+        code = graphlist[i][1]
         if len(minname)>12:
             minname = '%s.' %minname[0:12]
-        plt.text(textposleft, vertpos,"%s :" %minname, fontsize=12, color="blue")
-        plt.text(percentpos, vertpos,"%.1f %%" %float(graphlist[i][1]), fontsize=12, color="blue",  horizontalalignment='right')
+        plt.text(textposleft, vertpos,"%s #%s :" %(minname,code), fontsize=12, color="blue")       
+        plt.text(percentpos, vertpos,"%.1f %%" %float(graphlist[i][2]), fontsize=12, color="blue",  horizontalalignment='right')
         vertpos -= offset/15
     if len(graphlist) == 10:
         plt.text(xmin+(xmax-xmin)/50, vertpos,"...", fontsize=12, color="blue")

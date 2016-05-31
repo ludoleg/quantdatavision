@@ -15,7 +15,7 @@ class QuantModeModel(ndb.Model):
         qtarget = ndb.StringProperty(default="Co")
         fwhma = ndb.FloatProperty(default=-0.001348)
         fwhmb = ndb.FloatProperty(default=0.352021)
-        inventory = ndb.StringProperty(default="cement")
+        inventory = ndb.StringProperty(default="rockforming")
 
 class QuantMode(object):
         def whoami(self):

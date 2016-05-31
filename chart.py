@@ -7,7 +7,7 @@ import qxrd
 import qxrdtools
 # import conductor
 import graphit
-    
+
 def GenerateChart(obj_key):
     ##############################################################################
     ############   Program parameters   ##########################################

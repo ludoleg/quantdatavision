@@ -16,7 +16,6 @@ import chart
 from logics import QuantMode, QuantModeModel
 from models.session import SessionData
 
-import phaselist
 import csv
 
 JINJA_ENVIRONMENT = jinja2.Environment(
@@ -25,9 +24,9 @@ JINJA_ENVIRONMENT = jinja2.Environment(
     autoescape=True)
 
 
-def dynamic_png(key):
+def dynamic_png(session_key):
     # rv = StringIO.StringIO()
-    twoT, diff, bgpoly, calcdiff = chart.GenerateChart(key)
+    twoT, diff, bgpoly, calcdiff = chart.GenerateChart(session_key)
     return twoT, diff, bgpoly, calcdiff
 # return """<img src="data:image/png;base64,%s"/>""" % rv.getvalue().encode("base64").strip()
 
@@ -92,9 +91,8 @@ class crank(webapp2.RequestHandler):
         user_id = users.get_current_user().user_id()
         logging.debug(user_id)
         session = SessionData.query(SessionData.user == user_id).get()
-        user_data_key = session.key
-        logging.debug(user_data_key)
-        angle, diff, bgpoly, calcdiff = dynamic_png(user_data_key)
+        logging.debug(session.key)
+        angle, diff, bgpoly, calcdiff = dynamic_png(session.key)
 #        json_obj = {'angle': angle.tolist(), 'diff': diff.tolist(), 'bgpoly': bgpoly.tolist()}
         json_obj = {
             "filename": session.sampleFilename,
@@ -107,79 +105,20 @@ class crank(webapp2.RequestHandler):
         # logging.debug(json.dumps(json_obj))
         self.response.out.write(json.dumps(json_obj))
 
+        
 class plotPage(webapp2.RequestHandler):
     def get(self):
         template = JINJA_ENVIRONMENT.get_template('plot.html')
         template_vars = {}
         self.response.out.write(template.render(template_vars))
 
+        
 class aboutPage(webapp2.RequestHandler):
     def get(self):
         template = JINJA_ENVIRONMENT.get_template('about.html')
         template_vars = {}
         self.response.out.write(template.render(template_vars))
     
-class setPhase(webapp2.RequestHandler):
-    def get(self):
-        user = users.get_current_user()
-        if user:
-            user_id = users.get_current_user().user_id() 
-            session = SessionData.query(SessionData.user == user_id).get()
-            # Checks for Quant session
-            # If not, init a session
-            if not session:
-                a = -0.001348 
-                b =  0.352021 
-                session = SessionData(user=user_id,
-                                      email=user.nickname(),
-                                      qtarget = "Co",
-                                      qlambda = 0,
-                                      available = phaselist.availablePhases,
-                                      selected = phaselist.defaultPhases,
-                                      fwhma = a,
-                                      fwhmb = b
-                )
-                session.put()
-            template = JINJA_ENVIRONMENT.get_template('phase.html')
-            template_vars = {
-                'availablephaselist': session.available,
-                'selectedphaselist': session.selected
-            }
-            self.response.out.write(template.render(template_vars))
-        else:
-            logging.info("No user -> need login")
-            self.redirect(users.create_login_url(self.request.url))
-
-class setCalibration(webapp2.RequestHandler):
-    def get(self):
-        logging.debug("Calibration")
-        user = users.get_current_user()
-        if user:
-            user_id = users.get_current_user().user_id() 
-            session = SessionData.query(SessionData.user == user_id).get()
-            if not session:
-                a = -0.001348 
-                b =  0.352021 
-                session = SessionData(user=user_id,
-                                      email=user.nickname()
-                )
-                mode = QuantModeModel()
-                mode.put()
-                session.modes.append(mode)
-                session.put()
-            # logging.debug(session)
-            template = JINJA_ENVIRONMENT.get_template('calibration.html')
-            template_vars = {
-                'lambda': session.qlambda,
-                'target': session.qtarget,
-                'a': session.fwhma,
-                'b': session.fwhmb,
-            }
-            self.response.out.write(template.render(template_vars))
-        else:
-            logging.info("No user -> need login")
-            self.redirect(users.create_login_url(self.request.url))
-
 
 class database(webapp2.RequestHandler):
     def get(self):
@@ -248,44 +187,6 @@ class database(webapp2.RequestHandler):
             self.redirect(users.create_login_url(self.request.url))
 
         
-class handleCalibration(webapp2.RequestHandler):
-    def post(self):
-        logging.debug("handleCalibration")
-        user_id = users.get_current_user().user_id() 
-        session = SessionData.query(SessionData.user == user_id).get()
-        mylambda = self.request.get('lambda')
-        mytarget = self.request.get('target')
-        a = self.request.get('fwhma')
-        b = self.request.get('fwhmb')
-
-        logging.debug('Lambda retrieved: %s', mylambda)
-        logging.debug('Target retrieved: %s', mytarget)
-
-        session.qtarget = self.request.get('target')
-        if mylambda:
-            session.qlambda = float(mylambda)
-        if a:
-            session.fwhma = float(a)
-        if b:
-            session.fwhmb = float(b)
-        session.put()
-        self.redirect('/plot')
-
-class handlePhase(webapp2.RequestHandler):
-    def post(self):
-        logging.debug("Post args: %s", self.request.arguments())
-        selectedlist = self.request.get_all('selectedphase')
-        availlist = self.request.get_all('availablephase')
-        logging.debug('Phaselist selected retrieved: %s', selectedlist)
-        # logging.debug('Phaselist available retrieved: %s', availlist)
-        user_id = users.get_current_user().user_id() 
-        session = SessionData.query(SessionData.user == user_id).get()
-        selectedlist.sort()
-        availlist.sort()
-        session.selected = selectedlist
-        session.available = availlist
-        session.put()
-        self.redirect('/plot')
     
 class processFile(webapp2.RequestHandler):
     def post(self):
@@ -321,7 +222,7 @@ class processFile(webapp2.RequestHandler):
             mode = session.currentMode.get()
                 
             # Generate image, returns results
-            angle, diff, bgpoly, calcdiff = dynamic_png(session_data_key)
+            angle, diff, bgpoly, calcdiff = dynamic_png(session.key)
             csv = session_data_key.urlsafe()
             template = JINJA_ENVIRONMENT.get_template('chart.html')
             template_vars = {
@@ -354,16 +255,8 @@ class FileUploadFormHandler(webapp2.RequestHandler):
             session = SessionData.query(SessionData.user == user_id).get()
             # If not, init a session
             if not session:
-                a = -0.001348 
-                b =  0.352021 
                 session = SessionData(user=user_id,
                                       email=user.nickname(),
-                                      qtarget = "Co",
-                                      qlambda=0,
-                                      available = phaselist.availablePhases,
-                                      selected = phaselist.defaultPhases,
-                                      fwhma = a,
-                                      fwhmb = b
                 )
                 session.put()
                 # logging.debug(session.available)
@@ -377,21 +270,114 @@ class FileUploadFormHandler(webapp2.RequestHandler):
         else:
             logging.debug("No user -> need login")
             self.redirect(users.create_login_url(self.request.url))
-        
-class leave(webapp2.RequestHandler):
-    def get(self):
-        self.redirect(users.create_logout_url('/'))
 
-class isLogged(webapp2.RequestHandler):
+
+class handleCalibration(webapp2.RequestHandler):
+    logging.debug("handleCalibration")
     def get(self):
-        username = ''
+        logging.debug("Calibration")
         user = users.get_current_user()
         if user:
-            username = user.nickname()
-        self.response.content_type = 'application/json'
-        self.response.write(json.dumps(username))
+            user_id = users.get_current_user().user_id() 
+            session = SessionData.query(SessionData.user == user_id).get()
+            if not session:
+                # a = -0.001348 
+                # b =  0.352021 
+                session = SessionData(user=user_id,
+                                      email=user.nickname()
+                )
+                session_key = session.put()
+                mode = QuantModeModel(parent=session_key)
+                mode_key = mode.put()
+                session.currentMode = mode_key
+                session.put()
+
+            # Get the current Mode
+            mode = session.currentMode.get()
+            # logging.debug(mode)
+            template = JINJA_ENVIRONMENT.get_template('calibration.html')
+            template_vars = {
+                'lambda': mode.qlambda,
+                'target': mode.qtarget,
+                'a': mode.fwhma,
+                'b': mode.fwhmb
+            }
+            self.response.out.write(template.render(template_vars))
+        else:
+            logging.info("No user -> need login")
+            self.redirect(users.create_login_url(self.request.url))
+    def post(self):
+        user_id = users.get_current_user().user_id() 
+        session = SessionData.query(SessionData.user == user_id).get()
+        mylambda = self.request.get('lambda')
+        mytarget = self.request.get('target')
+        a = self.request.get('fwhma')
+        b = self.request.get('fwhmb')
+
+        logging.debug('Lambda retrieved: %s', mylambda)
+        logging.debug('Target retrieved: %s', mytarget)
+
+        mode = session.currentMode.get()
+                
+        mode.qtarget = self.request.get('target')
+        if mylambda:
+            mode.qlambda = float(mylambda)
+        if a:
+            mode.fwhma = float(a)
+        if b:
+            mode.fwhmb = float(b)
+        mode.put()
+        self.redirect('/plot')
+
+class handlePhase(webapp2.RequestHandler):
+    def get(self):
+        user = users.get_current_user()
+        if user:
+            user_id = users.get_current_user().user_id() 
+            session = SessionData.query(SessionData.user == user_id).get()
+            # Checks for Quant session
+            # If not, init a session
+            if not session:
+                session = SessionData(user=user_id,
+                                      email=user.nickname(),
+                )
+
+                session_key = session.put()
+                mode = QuantModeModel(parent=session_key)
+                mode_key = mode.put()
+                session.currentMode = mode_key
+                session.put()
+
+            # Get the current Mode
+            mode = session.currentMode.get()
+                            
+            template = JINJA_ENVIRONMENT.get_template('phase.html')
+            template_vars = {
+                'availablephaselist': mode.available,
+                'selectedphaselist': mode.selected
+            }
+            self.response.out.write(template.render(template_vars))
+        else:
+            logging.info("No user -> need login")
+            self.redirect(users.create_login_url(self.request.url))
+    def post(self):
+        logging.debug("Post args: %s", self.request.arguments())
+        selectedlist = self.request.get_all('selectedphase')
+        availlist = self.request.get_all('availablephase')
+        logging.debug('Phaselist selected retrieved: %s', selectedlist)
+        # logging.debug('Phaselist available retrieved: %s', availlist)
+        user_id = users.get_current_user().user_id() 
+        session = SessionData.query(SessionData.user == user_id).get()
+        mode = session.currentMode.get()
         
-# logging.getLogger().setLevel(logging.DEBUG)
+        selectedlist.sort()
+        availlist.sort()
+        
+        mode.selected = selectedlist
+        mode.available = availlist
+        mode.put()
+        self.redirect('/plot')
+        
 
 class Modes(webapp2.RequestHandler):
     def get(self):
@@ -402,17 +388,14 @@ class Modes(webapp2.RequestHandler):
             session = SessionData.query(SessionData.user == user_id).get()
             logging.debug("session")
             if not session:
-                 session = SessionData(user=user_id,
-                                      email=user.nickname(),
-                                      qtarget = "Co",
-                                      qlambda = 0,
-                                      available = phaselist.availablePhases,
-                                      selected = phaselist.defaultPhases,
-                                      fwhma = 1,
-                                      fwhmb = 2
-                 )
-                 session.put()
-            logging.debug(session)
+                session = SessionData(user=user_id,
+                                      email=user.nickname()
+                )
+                session_key = session.put()
+                mode = QuantModeModel(parent=session_key)
+                mode_key = mode.put()
+                session.currentMode = mode_key
+                session.put()
 
             # list_of_modes = ndb.get_multi(session.modes)
             # logging.debug(list_of_modes)
@@ -485,10 +468,9 @@ class ModesCreateHandler(webapp2.RequestHandler):
         self.redirect('/modes')
 
         
-class defaultMode(webapp2.RequestHandler):
+class activeMode(webapp2.RequestHandler):
     def get (self):
-        logging.debug("Default Mode")
-        logging.debug("Modes")
+        logging.debug("Active Mode")
         user = users.get_current_user()
         if user:
             user_id = users.get_current_user().user_id() 
@@ -522,14 +504,15 @@ class defaultMode(webapp2.RequestHandler):
         #get all input values
         user_id = users.get_current_user().user_id() 
         session = SessionData.query(SessionData.user == user_id).get()
-        default_mode = self.request.get('mode').strip()
-        logging.debug(default_mode)
+        active_mode = self.request.get('mode').strip()
+        logging.debug(active_mode)
 
-        qmode_k = ndb.Key('QuantModeModel', int(default_mode), parent=session.key)
+        qmode_k = ndb.Key('QuantModeModel', int(active_mode), parent=session.key)
         logging.debug(qmode_k)
         session.currentMode = qmode_k
         session.put()
         self.redirect('/')
+
         
 class ModesEditHandler(webapp2.RequestHandler):
     def get (self):
@@ -571,12 +554,27 @@ class ModesEditHandler(webapp2.RequestHandler):
         mode.save_mode(0, input_qtarget, float(input_qlambda), float(input_fwhma), float(input_fwhmb), input_inventory, int(mode_key_id))
         self.redirect('/modes')
 
+
+class leave(webapp2.RequestHandler):
+    def get(self):
+        self.redirect(users.create_logout_url('/'))
+
+        
+class isLogged(webapp2.RequestHandler):
+    def get(self):
+        username = ''
+        user = users.get_current_user()
+        if user:
+            username = user.nickname()
+        self.response.content_type = 'application/json'
+        self.response.write(json.dumps(username))
+        
+# logging.getLogger().setLevel(logging.DEBUG)
+
 ## Here is the WSGI application instance that routes requests
 app = webapp2.WSGIApplication([
-    ('/phase', setPhase),
-    ('/calibration', setCalibration),
-    ('/savePhase', handlePhase),
-    ('/saveCal', handleCalibration),
+    ('/phase', handlePhase),
+    ('/calibration', handleCalibration),
     ('/about', aboutPage),
     ('/chemin', chemin),
     ('/plot', plotPage),
@@ -589,7 +587,7 @@ app = webapp2.WSGIApplication([
     ('/isLogged', isLogged ),
     ('/modes/create', ModesCreateHandler),
     ('/modes/edit', ModesEditHandler),
-    ('/default', defaultMode),
+    ('/activeMode', activeMode),
     ('/leave', leave ),
     ('/ndb', database ),
     ('/', ShowHome),
