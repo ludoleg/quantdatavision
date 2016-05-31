@@ -4,7 +4,7 @@ class SessionData(ndb.Model):
     user = ndb.StringProperty()
     email = ndb.StringProperty()
     results = ndb.PickleProperty()
-    avatar = ndb.BlobProperty()
+    # avatar = ndb.BlobProperty()
     sampleFilename = ndb.StringProperty()
     sampleBlob = ndb.BlobProperty()
     currentMode = ndb.KeyProperty() #current mode - if set use it

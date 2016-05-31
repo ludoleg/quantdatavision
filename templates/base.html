@@ -49,12 +49,13 @@
 	    <li><a href="/about">About</a></li>
             <li class="dropdown">
               <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Settings<span class="caret"></span></a>
-              <ul class="dropdown-menu">
-                <li><a href="/phase">Set Phases</a></li>
-                <li><a href="/calibration">Calibration Parameters</a></li>
-                <li><a href="/modes">Manage Modes</a></li>
+              <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+                <li><a href="/modes">Create Modes</a></li>
 		<li class="divider"></li>
-                <li><a href="/activeMode">Active Mode</a></li>
+                <li><a href="/activeMode">Select Active Mode</a></li>
+                <li><a href="/calibration">Instrument Calibration Parameters</a></li>
+                <li><a href="/phase">Set Phases</a></li>
+
 		<!--
                     <li><a href="#">Something else here</a></li>
                 <li role="separator" class="divider"></li>
@@ -84,7 +85,7 @@
 <script>
   $( document ).ready(function() {
   $.ajax({
-  url: "/isLogged",
+  url: "/isLogged",`
   type: 'GET',
   dataType: 'json', // added data type
   success: function(res) {

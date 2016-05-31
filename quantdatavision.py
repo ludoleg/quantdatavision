@@ -82,7 +82,7 @@ class CsvDownloadHandler(webapp2.RequestHandler):
     self.response.headers['Content-Type'] = 'text/csv'
     self.response.headers['Content-Disposition'] = 'attachment; filename={}.csv'.format(session.sampleFilename)
     writer = csv.writer(self.response.out)
-    writer.writerow(['Mineral', 'Mass %'])
+    writer.writerow(['Mineral', 'AMCSD', 'Mass %'])
     writer.writerows(session.results)
 
 
@@ -139,17 +139,15 @@ class database(webapp2.RequestHandler):
                 session = SessionData(user=user_id,
                                       email=user.nickname()
                 )
-                mode = QuantModeModel(parent=session.key)
-                key = mode.put()
-                logging.debug(key)
-                session.currentMode = key
                 session.put()
-                logging.debug(session)
+                session_key = session.put()
+                # mode = QuantModeModel(parent=session_key)
+                mode = QuantModeModel.get_or_insert("DEFAULT")
+                mode_key = mode.put()
+                session.currentMode = mode_key
+                session.put()
 
             modes = QuantModeModel.query(ancestor=session.key)
-
-            for m in modes:
-                logging.debug(m)
 
             #key_to_delete = ndb.Key(QuantModeModel, kkk_id)
 
@@ -186,7 +184,6 @@ class database(webapp2.RequestHandler):
             logging.info("No user -> need login")
             self.redirect(users.create_login_url(self.request.url))
 
-        
     
 class processFile(webapp2.RequestHandler):
     def post(self):
@@ -207,6 +204,13 @@ class processFile(webapp2.RequestHandler):
                                       email=user.nickname()
                 )
                 session.put()
+                session_key = session.put()
+                # mode = QuantModeModel(parent=session_key)
+                mode = QuantModeModel.get_or_insert("DEFAULT")
+                mode_key = mode.put()
+                session.currentMode = mode_key
+                session.put()
+
             session.sampleBlob = self.request.get('file')
             session.sampleFilename = self.request.params["file"].filename
             session_data_key = session.put()
@@ -619,23 +623,23 @@ class isLogged(webapp2.RequestHandler):
 
 ## Here is the WSGI application instance that routes requests
 app = webapp2.WSGIApplication([
+    ('/about', aboutPage),
     ('/activeMode', activeMode),
     ('/phase', handlePhase),
     ('/calibration', handleCalibration),
-    ('/about', aboutPage),
     ('/chemin', chemin),
-    ('/plot', plotPage),
-    ('/modes', Modes),
-    ('/crank', crank),
     ('/csv',CsvDownloadHandler),
+    ('/crank', crank),
     ('/img', renderImage),
-    ('/process', processFile),
-    ('/upload_form', FileUploadFormHandler ),
     ('/isLogged', isLogged ),
+    ('/leave', leave ),
+    ('/modes', Modes),
     ('/modes/create', ModesCreateHandler),
     ('/modes/edit', ModesEditHandler),
-    ('/leave', leave ),
     ('/ndb', database ),
+    ('/plot', plotPage),
+    ('/process', processFile),
+    ('/upload_form', FileUploadFormHandler ),
     ('/', ShowHome),
 ], debug=True)
 

@@ -106,10 +106,8 @@ def GenerateChart(obj_key):
     # logging.info("w: {} h: {}".format(width, height))
     # session.avatar = rv_plot.getvalue()
     
-    # session.selected = results
     session.results = results
     session.put()
-    logging.debug(results)
 
     logging.debug(results)
     logging.info("Done with processing")

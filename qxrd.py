@@ -29,20 +29,18 @@ def Setparameters():
     return(BGsmoothing,w,w2,Polyorder,addBG,INIsmoothing,OStarget)
 
 
-def activatephases(mineral, code, selection):
+def activatephases(code, selection):
     '''  
     This function creates an enable list by comparing the inventory of the database (mineral, code) with the user selection
     returns an enable list 
     '''
     enable = []
-    selectedmin = []
     selectedcode = []
     for i in range (0, len(selection)):
-        selectedmin.append(selection[i][0])
         selectedcode.append(selection[i][1])
 
-    for i in range(0, len(mineral)):
-        if int(code[i]) in selectedcode:
+    for i in range(0, len(code)):
+        if code[i] in selectedcode:
             enable.append(1)
         else:
             enable.append(0)
@@ -105,22 +103,24 @@ def Qanalyze(userData, difdata, selection, instrParams):
     ##########  builds minerals lists   #########################################
 
     mineral, code = makephaselist(difdata)
-    enable = activatephases(mineral, code, selection)
-    mineral, code, enable = CleanMineralList(mineral, code, enable)
-    
+    nameref = {}
+    for i in range(0,len(code)):
+        nameref[code[i]] = mineral[i]
+    enable = activatephases(code, selection)
+    code, enable = CleanMineralList(code, enable)
     #######################   Extract from difdata      ############
     
     logging.info("Starting extracting from difdata")
     starttime = time.time()
-    DB, RIR, peakcount = makeDB(difdata, mineral, enable, Lambda)
+    DB, RIR, peakcount = makeDB(difdata, code, enable, Lambda)
     DB2T = DB[:,:,0]
     DBInt = DB[:,:,1]
-    PatDB, enable = calculatePatDB(angle,DB2T, DBInt, mineral, RIR, enable, sigmaa, sigmab)
+    PatDB, enable = calculatePatDB(angle,DB2T, DBInt, code, RIR, enable, sigmaa, sigmab)
     
     logging.info("PatDB computing time = %.3fs" %(time.time()-starttime))
     Thresh = setQthresh(RIR)
     trashme = RIR
-    mineral, RIR, enable, Thresh, trashme, PatDB = CleanMineralListPatDB (mineral, RIR, enable, Thresh, trashme, PatDB)
+    code, RIR, enable, Thresh, trashme, PatDB = CleanMineralListPatDB (code, RIR, enable, Thresh, trashme, PatDB)
     
     
     initialize = True
@@ -129,19 +129,19 @@ def Qanalyze(userData, difdata, selection, instrParams):
     starttime = time.time()
     if initialize:
         logging.info("Start Initialization")
-        Iinit = getIinitPatDB(angle,diff,BGpoly,PatDB, mineral,enable, INIsmoothing, OStarget)
+        Iinit = getIinitPatDB(angle,diff,BGpoly,PatDB, code,enable, INIsmoothing, OStarget)
         Ithresh = 0.05        
-        enable = Ithresholding(mineral, enable,RIR, Ithresh, Iinit)
+        enable = Ithresholding(code, enable,RIR, Ithresh, Iinit)
         while sum(enable) > 25:
             Ithresh += 0.01
-            enable = Ithresholding(mineral, enable,RIR, Ithresh, Iinit)
+            enable = Ithresholding(code, enable,RIR, Ithresh, Iinit)
             
                     
         
         logging.info("Done computing Initialization")
        
         #####     remove minerals disabled by initialization       ################     
-        mineral, RIR, enable, Thresh, Iinit, PatDB = CleanMineralListPatDB (mineral, RIR, enable, Thresh, Iinit, PatDB)
+        code, RIR, enable, Thresh, Iinit, PatDB = CleanMineralListPatDB (code, RIR, enable, Thresh, Iinit, PatDB)
         
     else:
         Iinit = np.array(([1.] * len(enable)))* np.array(enable)
@@ -153,15 +153,15 @@ def Qanalyze(userData, difdata, selection, instrParams):
     Qinit = Iinit/sum(Iinit)*100
     logging.info( "Iinit computing time = %.3fs" %(time.time()-starttime))
     
-    for i in range(0,len(mineral)):
-        logging.info("Qinit_%s : %.2f " %(mineral[i], Qinit[i]))
+    for i in range(0,len(code)):
+        logging.info("Qinit_%s : %.2f " %(nameref[code[i]], Qinit[i]))
     
     starttime = time.time()
     if optimize:
         
         logging.info("Start computing optimization")
         
-        mineral, RIR, enable, Thresh, I, PatDB = QrefinelstsqPatDB(angle, diff, BGpoly, mineral, RIR, enable, Thresh, Iinit, PatDB)
+        code, RIR, enable, Thresh, I, PatDB = QrefinelstsqPatDB(angle, diff, BGpoly, code, RIR, enable, Thresh, Iinit, PatDB)
         
         logging.info("Done computing optimization- starting drawing")
     else:
@@ -169,49 +169,29 @@ def Qanalyze(userData, difdata, selection, instrParams):
     logging.info("Phases enabled = %.0f", sum(enable))
     logging.debug("Done phaseanalyze")
     #####  reorganize results by decreasing % order #########
-    mineral, RIR, enable, Thresh, I, PatDB = CleanMineralListPatDB(mineral, RIR, enable, Thresh, I, PatDB)
-    mineral, RIR, enable, Thresh, I, PatDB = sortQlistPatDB(mineral, RIR, enable, Thresh, I, PatDB)
+    code, RIR, enable, Thresh, I, PatDB = CleanMineralListPatDB(code, RIR, enable, Thresh, I, PatDB)
+    code, RIR, enable, Thresh, I, PatDB = sortQlistPatDB(nameref, code, RIR, enable, Thresh, I, PatDB)
     ####    #redo DB with shorter list    #####
 
     Sum= sumPat(I, PatDB)
     #Sum *= max(diff-BGpoly)/max(Sum)
     Sum += BGpoly
     
-    for i in range (0, len(mineral)):
-        logging.info("%s = %.2f" %(mineral[i], I[i]))
+    for i in range (0, len(code)):
+        logging.info("%s = %.2f" %(code[i], I[i]))
     
     Q = I/sum(I)*100
     logging.info("I Lstsq computing time = %.3fs" %(time.time()-starttime))
-    logging.debug(mineral)
+    logging.debug(code)
     
-    '''for i in range(0,len(mineral)):
-        logging.info("Q_%s : %.2f " %(mineral[i], Q[i]))
-    '''
     results = []    
-    for i in range(0, len(mineral)):
-        print mineral[i]
-        results.append([mineral[i], '%.2f' %Q[i]])
+    for i in range(0, len(code)):
+        results.append([nameref[code[i]], code[i], '%.2f' %Q[i]])
 
     return results, BGpoly, Sum
 
-def extractlists(phaselist) :
-    '''
-    #### extracts 3 lists: mineral, RIR, enable 
-    '''
-    mineral=[]
-    RIR=[]
-    enable=[]
-    for i in range(1, len(phaselist)):
-        line = phaselist[i]
-        # logging.warning('%s before you %s', 'Look', 'leap!')
-        # logging.debug(line)
-        line = line[0:len(line)-1]
-        phaselist[i] = line.split('\t')
-        mineral.append(phaselist[i][0])
-        RIR.append(float(phaselist[i][1]))
-    return mineral, RIR
-
 '''
+
 Bellow is the function to calculate the gaussian patterns using an erf function instead of a gaussian, to avoid sampling errors. 
 It works but it's incredibly slow.   (65.s vs 1.5s).   Saved for later use:
 if we detect 2theta sampling conditions not meeting Nyquist rule.
@@ -347,32 +327,19 @@ def makephaselist(difdata):
         line = difdata[i]
         if nameline:
             namelinenum = i
-            name.append((line[6:-1]))
+            name.append(str(line[6:-2]))
             nameline = False
         if not(nameline) and ("database_code_amcsd") in line:
-            code.append((line[27:-1]))
-        '''
-        elif ("MAX. ABS. INTENSITY / VOLUME**2:") in line:
-            iv2=float(line[44:-1])
-        elif ("CELL PARAMETERS:") in line:
-                    cellparamline = line[24:len(line)-1]
-                    cellparam = [float(n) for n in cellparamline.split()]
-                    for k in range(3,6):
-                        cellparam[k] *=pi/180
-                    Vcell = cellparam[0] * cellparam[1] *cellparam[2] * (1- (cos(cellparam[3]))**2 - (cos(cellparam[4]))**2 - (cos(cellparam[5]))**2 + 2 * cos(cellparam[3]) * cos(cellparam[4]) * cos(cellparam[5]))**0.5
-        if iv2 > 0 and Vcell > 0:
-                Imax = (iv2*Vcell)                    
-        '''        
+            code.append(int((line[27:-1])))
+ 
         if not(nameline) and "_END_" in line:
             endline = i
             nameline = True
 
-
-    phaselist = (name, code)# Imax/Icor)
-    return phaselist
+    return name, code
 
 
-def makeDB(difdata, mineral, enable, Lambda):
+def makeDB(difdata, codelist, enable, Lambda):
     """"
     # DB is a 3D list containing all data of each mineral
     ##  1st dimension:  mineral number
@@ -382,32 +349,39 @@ def makeDB(difdata, mineral, enable, Lambda):
     
     limits_nameorder = []
     nameline = True
-    name = []
+    codes = []
     # loop bellow find the line positions of each beginning and end of difdata.txt
     for i in range(0, len(difdata)):
         line = difdata[i]
         if nameline:
+            cardcode = 0
+            for j in range (i, i+11):
+                line2 = difdata[j]
+                if ("_database_code_amcsd") in line2:
+                    cardcode = int(line2[26:-1])
             namelinenum = i
-            name.append((line[6:len(line)-1]))
+            if cardcode > 0 :
+                codes.append(cardcode)
             nameline = False
         if "_END_" in line:
             endline = i
-            limits_nameorder.append([namelinenum,endline])
+            if cardcode > 0 :
+                limits_nameorder.append([namelinenum,endline])
             nameline = True
 
     limits = np.zeros_like(limits_nameorder)        
         
-    for i in range(0,len(mineral)):
-        for j in range(0,len(name)):
-            if name[j] == mineral[i]:
+    for i in range(0,len(codelist)):
+        for j in range(0,len(codes)):
+            if codes[j] == codelist[i]:
                 limits[i] = limits_nameorder[j]
 
     RIR = []
     cellparam = []
-    DB = np.zeros((len(mineral), 200, 7))
+    DB = np.zeros((len(codelist), 200, 7))
     peakcount = 0
 
-    for i in range(0, len(mineral)):
+    for i in range(0, len(codelist)):
         iv2=0
         density=0
         datavalues = []
@@ -533,78 +507,76 @@ def Qthresholding(mineral, enable, Thresh, I):
             #logging.info( "%s- init : %.1f >>> eliminated\t" %(mineral[i],Q[i]))
     return enable
 
-def CleanMineralList(mineral, RIR, enable):
+def CleanMineralList(code, enable):
     '''
     #####  removes minerals in list if enable=0
     #####  restructures all lists in input
     '''
-    mineralthresh = []
-    RIRthresh=[]
+    codethresh = []
     enablethresh=[]
     
-    for i in range(0, len(mineral)):
+    for i in range(0, len(code)):
         if enable[i] == 1:
-            mineralthresh.append(mineral[i])
-            RIRthresh.append(RIR[i])
+            codethresh.append(code[i])
             enablethresh.append(enable[i])
-    return mineralthresh, RIRthresh, enablethresh
+    return codethresh, enablethresh
 
 
-def CleanMineralListPatDB (mineral, RIR, enable, Thresh, I, PatDB):
+def CleanMineralListPatDB (code, RIR, enable, Thresh, I, PatDB):
     '''
     #####  removes minerals in list if enable=0
     #####  restructures all lists in input
     #t0=time.time()
     '''
-    mineralthresh = []
+    codethresh = []
     RIRthresh=[]
     enablethresh=[]
     Threshthresh=[]
     Ithresh=[]
     PatDBthresh=[]
     
-    for i in range(0, len(mineral)):
+    for i in range(0, len(code)):
         if enable[i] == 1:
-            mineralthresh.append(mineral[i])
+            codethresh.append(code[i])
             RIRthresh.append(RIR[i])
             enablethresh.append(enable[i])
             Threshthresh.append(Thresh[i])
             Ithresh.append(I[i])
             PatDBthresh.append(PatDB[i])
     #logging.info("list cleanup computing time = %.2f" %(time.time()-t0))
-    return mineralthresh, RIRthresh, enablethresh, Threshthresh, Ithresh, PatDBthresh
+    return codethresh, RIRthresh, enablethresh, Threshthresh, Ithresh, PatDBthresh
 
 
 def getKey(item):
     # used for sorting % results in decreasing order
-    return item[4]
+    return item[5]
 
 
-def sortQlistPatDB(mineral, RIR, enable, Thresh, I, PatDB):
+def sortQlistPatDB(nameref, code, RIR, enable, Thresh, I, PatDB):
     
     #######################   sorts lists in decreasing Q order      ############
     table = []
-    for i in range(0,len(mineral)):
-        table.append([mineral[i], RIR[i], enable[i], Thresh[i], I[i], PatDB[i]])
+    for i in range(0,len(code)):
+        table.append([nameref[code[i]], code[i], RIR[i], enable[i], Thresh[i], I[i], PatDB[i]])
 
     table.sort(key=getKey, reverse=True)
     
-    mineralsorted =[]
+    codesorted =[]
     enablesorted=[]
     RIRsorted=[]
     Threshsorted=[]
     Isorted=[]
     PatDBsorted=[]
     
-    for i in range(0,len(mineral)):
-        mineralsorted.append(table [i][0])
-        RIRsorted.append(table[i][1])
-        enablesorted.append(table[i][2])
-        Threshsorted.append(table[i][3])
-        Isorted.append(table[i][4])
-        PatDBsorted.append(table[i][5])
+    for i in range(0,len(code)):
+        codesorted.append(table [i][1])
+        RIRsorted.append(table[i][2])
+        enablesorted.append(table[i][3])
+        Threshsorted.append(table[i][4])
+        Isorted.append(table[i][5])
+        PatDBsorted.append(table[i][6])
     
-    return mineralsorted, RIRsorted, enablesorted, Threshsorted, Isorted, PatDBsorted    
+    return codesorted, RIRsorted, enablesorted, Threshsorted, Isorted, PatDBsorted    
     
 def residualPatDB(I, Yexp, PatDB):
     """
@@ -643,7 +615,7 @@ def QrefinelstsqPatDB(angle,diff,BGpoly, mineral, RIR, enable, Thresh, Iinit, Pa
         if sum(enable2) < sum(enable):
             Keep_refining = True
             enable = enable2
-            mineral, RIR, enable, Thresh, I, PatDB = CleanMineralListPatDB(mineral, RIR, enable, Thresh, I, PatDB)
+            mineral, RIR, enable, Thresh, I, PatDB = CleanMineralListPatDB(code, RIR, enable, Thresh, I, PatDB)
         
         if counter < 3:
             Keep_refining = True
