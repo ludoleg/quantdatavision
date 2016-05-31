@@ -29,16 +29,16 @@ def GenerateChart(obj_key):
     logging.debug(mode.inventory)
 
     if mode.inventory == "cement":
-        phaselistname = 'difdata_cement_inventory.csv'
+        # phaselistname = 'difdata_cement_inventory.csv'
         DBname ='difdata_cement.txt'
     elif mode.inventory == "pigment":
-        phaselistname = 'difdata_pigment_inventory.csv'
+        # phaselistname = 'difdata_pigment_inventory.csv'
         DBname ='difdata_pigment.txt'
     elif mode.inventory == "rockforming":
-        phaselistname = 'difdata-rockforming_inventory.csv'
+        # phaselistname = 'difdata-rockforming_inventory.csv'
         DBname ='difdata-rockforming.txt'
     elif mode.inventory == "chemin":
-        phaselistname = 'difdata_CheMin_inventory.csv'
+        # phaselistname = 'difdata_CheMin_inventory.csv'
         DBname ='difdata_CheMin.txt'
     else:
         logging.debug("Can't find inventory")
@@ -68,7 +68,7 @@ def GenerateChart(obj_key):
     logging.debug(XRDdata)
     
     # phaselistname = 'phaselist.csv'
-    phaselist = open(phaselistname, 'r').readlines()
+    # phaselist = open(phaselistname, 'r').readlines()
     mode = session.currentMode.get()
     selectedPhases = mode.selected
     
@@ -89,8 +89,8 @@ def GenerateChart(obj_key):
 
     # Dif data captures all cristallographic data
     selectedphases = []
-    for i in range (1, len(phaselist)):
-        name, code = phaselist[i].split('\t')
+    for i in range (1, len(selectedPhases)):
+        name, code = selectedPhases[i].split('\t')
         code = int(code)
         selectedphases.append((name,code))
 

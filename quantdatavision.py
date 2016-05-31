@@ -327,7 +327,8 @@ class handleCalibration(webapp2.RequestHandler):
         if b:
             mode.fwhmb = float(b)
         mode.put()
-        self.redirect('/plot')
+        # self.redirect('/plot')
+        self.redirect('/')
 
 class handlePhase(webapp2.RequestHandler):
     def get(self):
@@ -350,6 +351,9 @@ class handlePhase(webapp2.RequestHandler):
 
             # Get the current Mode
             mode = session.currentMode.get()
+
+            logging.debug(mode.selected)
+            logging.debug(mode.available)
                             
             template = JINJA_ENVIRONMENT.get_template('phase.html')
             template_vars = {
@@ -376,7 +380,8 @@ class handlePhase(webapp2.RequestHandler):
         mode.selected = selectedlist
         mode.available = availlist
         mode.put()
-        self.redirect('/plot')
+        # self.redirect('/plot')
+        self.redirect('/')
         
 
 class Modes(webapp2.RequestHandler):
@@ -426,47 +431,6 @@ class Modes(webapp2.RequestHandler):
                 self.redirect('/modes')
 
             
-class ModesCreateHandler(webapp2.RequestHandler):
-    def get(self):
-        user = users.get_current_user()
-        if user:
-            template = JINJA_ENVIRONMENT.get_template('modesCreate.html')
-            self.response.out.write(template.render())
-        else:
-            self.redirect(users.create_login_url(self.request.uri))
-    def post(self):
-        logging.debug("Create Modes")
-        #get all input values
-        qtarget = self.request.get('target').strip()
-        qlambda = self.request.get('lambda').strip()
-        fwhma = self.request.get('fwhma').strip()
-        fwhmb = self.request.get('fwhmb').strip()
-        title = self.request.get('modeTitle').strip()
-        inventory = self.request.get('inventory').strip()
-        
-        # mode = QuantModeModel(title=title,
-        #                       qlambda=float(qlambda),
-        #                       qtarget=qtarget,
-        #                       fwhma=float(fwhma),
-        #                       fwhmb=float(fwhmb))
-        # key = mode.put()
-
-        # user_id = users.get_current_user().user_id() 
-        # session = SessionData.query(SessionData.user == user_id).get()
-
-        # session.modes.append(key)
-        # session.put()
-        
-        # list_of_modes = ndb.get_multi(session.modes)
-        # for k in list_of_modes:
-        #     logging.debug(k)
-        
-        # logging.debug(session)
-
-        mode = QuantMode()
-        mode.save_mode(title ,qtarget, float(qlambda), float(fwhma), float(fwhmb), inventory, 0)
-        self.redirect('/modes')
-
         
 class activeMode(webapp2.RequestHandler):
     def get (self):
@@ -481,7 +445,7 @@ class activeMode(webapp2.RequestHandler):
                                       email=user.nickname(),
                  )
                  session.put()
-            logging.debug(session)
+            # logging.debug(session)
 
             # list_of_modes = ndb.get_multi(session.modes)
             # logging.debug(list_of_modes)
@@ -555,6 +519,88 @@ class ModesEditHandler(webapp2.RequestHandler):
         self.redirect('/modes')
 
 
+class ModesCreateHandler(webapp2.RequestHandler):
+    def get(self):
+        user = users.get_current_user()
+        if user:
+            template = JINJA_ENVIRONMENT.get_template('modesCreate.html')
+            self.response.out.write(template.render())
+        else:
+            self.redirect(users.create_login_url(self.request.uri))
+    def post(self):
+        logging.debug("Create Modes")
+        #get all input values
+        qtarget = self.request.get('target').strip()
+        qlambda = self.request.get('lambda').strip()
+        fwhma = self.request.get('fwhma').strip()
+        fwhmb = self.request.get('fwhmb').strip()
+        title = self.request.get('modeTitle').strip()
+        inventory = self.request.get('inventory').strip()
+
+        # Populate the phaselist according to the inventory choice
+        # Read in the file
+        jump = 1
+        if inventory == "cement":
+            phaselistname = 'difdata_cement_inventory.csv'
+        elif inventory == "pigment":
+            phaselistname = 'difdata_pigment_inventory.csv'
+        elif inventory == "rockforming":
+            phaselistname = 'difdata-rockforming_inventory.csv'
+        elif inventory == "chemin":
+            phaselistname = 'difdata_CheMin_inventory.csv'
+        else:
+            logging.debug("Can't find inventory")
+
+        phaselist = open(phaselistname, 'r').readlines()[jump:]
+
+        phaselist.sort()
+        logging.debug(phaselist)
+
+        user_id = users.get_current_user().user_id()
+        session = SessionData.query(SessionData.user == user_id).get()
+
+        # Mode creation: last parameter = 0
+        # mode = QuantMode()
+        # mode.save_mode(title ,qtarget, float(qlambda), float(fwhma), float(fwhmb), inventory, phaselist, 0)
+
+        # Create mode
+	qmode = QuantModeModel(title=title, parent=session.key)
+
+	qmode.qlambda = float(qlambda)
+	qmode.qtarget = qtarget
+	qmode.fwhma = float(fwhma)
+	qmode.fwhmb = float(fwhmb)
+        qmode.inventory = inventory
+        qmode.selected = phaselist
+        qmode.available = []
+
+	key = qmode.put()
+        
+        session.currentMode = key
+        session.put()
+        
+        # mode = QuantModeModel(title=title,
+        #                       qlambda=float(qlambda),
+        #                       qtarget=qtarget,
+        #                       fwhma=float(fwhma),
+        #                       fwhmb=float(fwhmb))
+        # key = mode.put()
+
+        # user_id = users.get_current_user().user_id() 
+        # session = SessionData.query(SessionData.user == user_id).get()
+
+        # session.modes.append(key)
+        # session.put()
+        
+        # list_of_modes = ndb.get_multi(session.modes)
+        # for k in list_of_modes:
+        #     logging.debug(k)
+        
+        # logging.debug(session)
+
+        self.redirect('/modes')
+
+
 class leave(webapp2.RequestHandler):
     def get(self):
         self.redirect(users.create_logout_url('/'))
@@ -573,6 +619,7 @@ class isLogged(webapp2.RequestHandler):
 
 ## Here is the WSGI application instance that routes requests
 app = webapp2.WSGIApplication([
+    ('/activeMode', activeMode),
     ('/phase', handlePhase),
     ('/calibration', handleCalibration),
     ('/about', aboutPage),
@@ -587,7 +634,6 @@ app = webapp2.WSGIApplication([
     ('/isLogged', isLogged ),
     ('/modes/create', ModesCreateHandler),
     ('/modes/edit', ModesEditHandler),
-    ('/activeMode', activeMode),
     ('/leave', leave ),
     ('/ndb', database ),
     ('/', ShowHome),
