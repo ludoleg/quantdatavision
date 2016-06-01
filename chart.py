@@ -1,12 +1,12 @@
 import logging
 
 import StringIO
-from PIL import Image
+# from PIL import Image
 
 import qxrd
 import qxrdtools
 # import conductor
-import graphit
+# import graphit
 
 def GenerateChart(obj_key):
     ##############################################################################
