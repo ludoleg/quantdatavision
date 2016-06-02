@@ -1,18 +1,18 @@
 {% extends "base.html" %}
 {% block title %}QAnalyze - XRD pattern chart{% endblock %}
 {% block content %}
-<h3>Mode: {{ mode.title }}</h1>
-<h3>Inventory: {{ mode.inventory }}</h1>
 <div id="xrdplot" style="width:1200px;height:400px;"></div>
 <div class="container">
   <div class="row">
-    <div class="col-sm-4">
+    <div class="col-lg-3">
+<h4>Mode: {{ mode.title }}</h4>
+<h4>Database: {{ mode.inventory }}</h4>
     </div>
-    <div class="col-sm-3">
+    <div class="col-lg-6">
       <table class="table table-bordered table-condensed" style="width: auto;">
 	<tr>
-	  <th bgcolor="#DDDDDD">Mineral</th>
-	  <th bgcolor="#DDDDDD">AMCSD Code</th> 
+	  <th bgcolor="#DDDDDD">Phase</th>
+	  <th bgcolor="#DDDDDD">AMCSD Code #</th> 
 	  <th bgcolor="#DDDDDD">Mass %</th> 
 	</tr>
 	{%- for row in phaselist %}
@@ -24,7 +24,7 @@
 	{%- endfor %}
       </table>
     </div>
-    <div class="col-sm-4">
+    <div class="col-lg-3">
       <div id="csvbutton" >
 	<a href="/csv?key={{ url_text }}" type="button" class="btn btn-xs btn-primary">Download CSV</button></a>
       </div>

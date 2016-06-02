@@ -186,7 +186,7 @@ def Qanalyze(userData, difdata, selection, instrParams):
     
     results = []    
     for i in range(0, len(code)):
-        results.append([nameref[code[i]], code[i], '%.2f' %Q[i]])
+        results.append([nameref[code[i]], code[i], '%.1f' %Q[i]])
 
     return results, BGpoly, Sum
 

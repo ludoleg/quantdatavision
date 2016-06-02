@@ -40,20 +40,19 @@
           </button>
           <a class="navbar-brand" href="/">QAnalyze</a>
         </div>
-        <div id="navbar" class="navbar-collapse collapse">
-            <ul class="nav navbar-nav navbar-right">
-                <li><div id="userdisplay" class="navbar-text" style="display:none;"></div></li>
-            </ul>
+        <div id="navbar" class="navbar-collapse collapse pull-right">
+            <div id="userdisplay" class="navbar-text" style="display:none;"></div>
+          </div>
             <ul class="nav navbar-nav">
 	    <!-- <li class="active"><a href="/">Home</a></li> -->
 	    <li><a href="/about">About</a></li>
             <li class="dropdown">
               <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Settings<span class="caret"></span></a>
               <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
-                <li><a href="/modes">Create Modes</a></li>
+                <li><a href="/modes">Create/Edit Modes</a></li>
 		<li class="divider"></li>
                 <li><a href="/activeMode">Select Active Mode</a></li>
-                <li><a href="/calibration">Instrument Calibration Parameters</a></li>
+                <!-- <li><a href="/calibration">Instrument Calibration Parameters</a></li> -->
                 <li><a href="/phase">Set Phases</a></li>
 
 		<!--
@@ -85,7 +84,7 @@
 <script>
   $( document ).ready(function() {
   $.ajax({
-  url: "/isLogged",`
+  url: "/isLogged",
   type: 'GET',
   dataType: 'json', // added data type
   success: function(res) {

@@ -517,9 +517,11 @@ class ModesEditHandler(webapp2.RequestHandler):
         logging.debug(input_fwhmb)
         input_inventory = self.request.get('inventory').strip()
         logging.debug(input_inventory)
+        input_description = self.request.get('desc').strip()
+        logging.debug(input_description)
 
         mode = QuantMode()
-        mode.save_mode(0, input_qtarget, float(input_qlambda), float(input_fwhma), float(input_fwhmb), input_inventory, int(mode_key_id))
+        mode.save_mode(0, input_description, input_qtarget, float(input_qlambda), float(input_fwhma), float(input_fwhmb), input_inventory, int(mode_key_id))
         self.redirect('/modes')
 
 
@@ -540,6 +542,7 @@ class ModesCreateHandler(webapp2.RequestHandler):
         fwhmb = self.request.get('fwhmb').strip()
         title = self.request.get('modeTitle').strip()
         inventory = self.request.get('inventory').strip()
+        description = self.request.get('modeDesc').strip()
 
         # Populate the phaselist according to the inventory choice
         # Read in the file
@@ -575,6 +578,7 @@ class ModesCreateHandler(webapp2.RequestHandler):
 	qmode.fwhma = float(fwhma)
 	qmode.fwhmb = float(fwhmb)
         qmode.inventory = inventory
+        qmode.description = description
         qmode.selected = phaselist
         qmode.available = []
 
@@ -615,7 +619,10 @@ class isLogged(webapp2.RequestHandler):
         username = ''
         user = users.get_current_user()
         if user:
+            # username = 'Login'
             username = user.nickname()
+        else:
+            username = 'Not logged in'
         self.response.content_type = 'application/json'
         self.response.write(json.dumps(username))
         

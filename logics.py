@@ -9,6 +9,7 @@ from models.session import SessionData
 
 class QuantModeModel(ndb.Model):
         title = ndb.StringProperty(default="default")
+        description = ndb.StringProperty()
         selected = ndb.PickleProperty(default=phaselist.defaultPhases)
         available = ndb.PickleProperty(default=phaselist.availablePhases)
         qlambda = ndb.FloatProperty(default=0)
@@ -20,7 +21,7 @@ class QuantModeModel(ndb.Model):
 class QuantMode(object):
         def whoami(self):
                 logging.info("I am a QuantMode instance")        
-        def save_mode (self,qname,qtarget,qlambda,a,b,inventory,input_id):
+        def save_mode (self,qname,qdesc,qtarget,qlambda,a,b,inventory,input_id):
 		#id will be greater than zero when EDIT action is triggered.
                 user_id = users.get_current_user().user_id()
 		if input_id>0:
@@ -59,6 +60,7 @@ class QuantMode(object):
 		qmode.fwhma = a
 		qmode.fwhmb = b
                 qmode.inventory = inventory
+                qmode.description = qdesc
                 
                 #		qmode.user_name = users.get_current_user().email()
 		key = qmode.put()
