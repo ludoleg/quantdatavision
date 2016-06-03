@@ -461,11 +461,18 @@ class activeMode(webapp2.RequestHandler):
             # for m in list_of_modes:
             #     logging.debug(m)
 
+            currentMode = session.currentMode.get()
+            logging.debug(currentMode)
+            activeTitle = currentMode.title
+            
             mode = QuantMode()
             list = mode.list_mode()
             
-            template_vars = {'modes' : mode.list_mode()            }
-            template = JINJA_ENVIRONMENT.get_template('default.html')
+            template_vars = {
+                'modes' : mode.list_mode(),
+                'title': activeTitle
+            }
+            template = JINJA_ENVIRONMENT.get_template('activeMode.html')
             self.response.out.write(template.render(template_vars))
         else:
             logging.info("No user -> need login")
