@@ -31,8 +31,8 @@ def GenerateChart(obj_key):
         session.currentMode = mode_key
         session.put()
         
-    logging.info("Mode ->")
-    logging.info(mode)
+    logging.debug("Mode ->")
+    logging.debug(mode)
 
     # Load the sample data file in userData
     # parse sample data file wrt format
@@ -64,19 +64,30 @@ def GenerateChart(obj_key):
     FWHMa = mode.fwhma
     FWHMb = mode.fwhmb
     
+    # Boundaries check
     if(Lambda > 2.2 or Lambda == 0):
         Lambda = ''
-    
+    if(FWHMa > 0.01):
+        FWHMa = 0.01
+    if(FWHMa < -0.01):
+        FWHMa = -0.01
+    if(FWHMb > 1.0):
+        FWHMb = 1.0
+    if(FWHMb < 0.01):
+        FWHMb = 0.01
+        
     # InstrParams = {"Lambda": 0, "Target": '', "FWHMa": -0.001348, "FWHMb": 0.352021}
     InstrParams = {"Lambda": Lambda, "Target": Target, "FWHMa": FWHMa, "FWHMb": FWHMb}
 
-    logging.debug("Filename: {}".format(filename))
-    logging.debug("Target: %s", Target)
-    logging.debug("Lambda: %s", Lambda)
-    logging.debug("Fa: %d", FWHMa)
-    logging.debug("Fb: %d", FWHMb)
-    logging.debug(mode.title)
-    logging.debug(mode.inventory)
+    logging.info("Filename: {}".format(filename))
+    logging.info("Target: %s", Target)
+    logging.info("Lambda: %s", Lambda)
+    logging.info("Fa: %s", FWHMa)
+    logging.info("Fb: %s", FWHMb)
+    logging.info(mode.title)
+    logging.info(mode.inventory)
+
+    logging.debug(InstrParams)
     
     # Phase selection
     selectedPhases = mode.selected
