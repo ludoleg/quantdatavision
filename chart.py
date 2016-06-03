@@ -7,6 +7,8 @@ import qxrdtools
 # import conductor
 # import graphit
 
+from logics import QuantMode, QuantModeModel
+
 def GenerateChart(obj_key):
     """ Execute diffraction computation and returns arrays of (x,y) datat for graph rendering """
     
@@ -20,6 +22,15 @@ def GenerateChart(obj_key):
     # mode_key = session.currentMode
     # mode = mode_key.get()
     mode = session.currentMode.get()
+
+    if(mode == None):
+        logging.critical("Current Mode invalid")
+        logging.critical("Plugging default")
+        mode = QuantModeModel.get_or_insert("DEFAULT")
+        mode_key = mode.put()
+        session.currentMode = mode_key
+        session.put()
+        
     logging.info("Mode ->")
     logging.info(mode)
 

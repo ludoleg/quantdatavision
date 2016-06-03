@@ -223,10 +223,12 @@ class processFile(webapp2.RequestHandler):
             for m in modes:
                 logging.debug(m.title)
 
-            mode = session.currentMode.get()
-                
             # Generate image, returns results
             angle, diff, bgpoly, calcdiff = dynamic_png(session.key)
+
+            mode = session.currentMode.get()
+            logging.debug(mode.title)
+                
             csv = session_data_key.urlsafe()
             template = JINJA_ENVIRONMENT.get_template('chart.html')
             template_vars = {
