@@ -46,15 +46,19 @@ class renderImage(webapp2.RequestHandler):
 
 class ShowHome(webapp2.RequestHandler):
     def get(self):
-        logging.debug('Starting ShowHome')
-        ## Code to render home page
-        title = "XRD Qanalyze"
-        template = JINJA_ENVIRONMENT.get_template('index.html')
-        template_vars = {
-            'title': title,
-        }
-        self.response.out.write(template.render(template_vars))
-
+        user = users.get_current_user()
+        if user:
+            logging.debug('Starting ShowHome')
+            ## Code to render home page
+            title = "XRD Qanalyze"
+            template = JINJA_ENVIRONMENT.get_template('index.html')
+            template_vars = {
+                'title': title,
+            }
+            self.response.out.write(template.render(template_vars))
+        else:
+            self.redirect(users.create_login_url(self.request.uri))
+            
 class chemin(webapp2.RequestHandler):
     def get(self):
         logging.debug('Starting Chemin')
