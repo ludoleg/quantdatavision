@@ -368,7 +368,8 @@ class handlePhase(webapp2.RequestHandler):
             template = JINJA_ENVIRONMENT.get_template('phase.html')
             template_vars = {
                 'availablephaselist': mode.available,
-                'selectedphaselist': mode.selected
+                'selectedphaselist': mode.selected,
+                'mode': mode
             }
             self.response.out.write(template.render(template_vars))
         else:

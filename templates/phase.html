@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="page-header">
-  <h2>Phase Profile</h2>
-  <h3>Active Mode: Cement</h3>
+  <h3>Phase Profile</h3>
+  <h3>Active Mode: {{ mode.title }}</h3>
 </div>
 <form action="/phase"
       method="POST"
