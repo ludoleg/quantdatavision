@@ -1,7 +1,8 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="page-header">
-  <h1>Phase Profile</h1>
+  <h2>Phase Profile</h2>
+  <h3>Active Mode: Cement</h3>
 </div>
 <form action="/phase"
       method="POST"
@@ -31,7 +32,7 @@
       <input type="button" id="btnRight" value="&gt;&gt;" />
     </div>
     <div class="col-xs-3">
-      <select name="selectedphase" id="rightValues" multiple="multiple" class="form-control" size="20">
+      <select name="selectedphase" id="rightValues" multiple="multiple" class="form-control" size="20" required>
 	{% if (selectedphaselist is defined) and selectedphaselist %}
         {% for item in selectedphaselist %}
         <option  value="{{ item }}">{{ item }}</option>
