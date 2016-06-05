@@ -15,7 +15,7 @@ import time
 
 datafilepath='XRD_data'
 # datafilename = "CalciteP-film.plv"
-datafilename = "Mix3D-film.txt"
+datafilename = "Mix2D-film.txt"
 DBfilepath='databases'
 DBname="difdata-rockforming.txt"
 phaselistname = 'test_list.csv'
