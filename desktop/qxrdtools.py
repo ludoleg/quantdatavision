@@ -30,11 +30,7 @@ def openXRD(file, filename):
             jump+=1
             i+=1
         angle, diff = np.loadtxt(txtfile[jump:], unpack=True, delimiter='\t')
-        '''jump=7
-        XRDdata = blob.readlines()[jump:]
-        # XRDdata = blob.open().readlines()[jump:]
-        angle, diff = np.loadtxt(XRDdata, unpack=True)
-        '''
+
     elif filename.endswith(".dif") or filename.endswith(".mdi"):
         dif = blob.readlines()
         paramline = dif[1]
