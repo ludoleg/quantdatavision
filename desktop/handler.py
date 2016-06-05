@@ -14,8 +14,8 @@ import os
 import time
 
 datafilepath='XRD_data'
-# datafilename = "CalciteP-film.plv"
-datafilename = "Mix2D-film.txt"
+datafilename = "CalciteP-film.plv"
+# datafilename = "Mix2D-film.txt"
 DBfilepath='databases'
 DBname="difdata-rockforming.txt"
 phaselistname = 'test_list.csv'
@@ -33,8 +33,11 @@ for i in range (1, len(phaselist)):
     code = int(code)
     selectedphases.append((name,code))
 
+file = os.path.join(datafilepath, datafilename)
+blob = open(file, 'r')
 
-userData = qxrdtools.openXRD(os.path.join(datafilepath, datafilename), os.path.join(datafilepath, datafilename))
+userData = qxrdtools.openXRD(blob, os.path.join(datafilepath, datafilename))
+# userData = qxrdtools.openXRD(os.path.join(datafilepath, datafilename), os.path.join(datafilepath, datafilename))
 
 results, BG, calcdiff = qxrd.Qanalyze(userData, difdata, selectedphases, InstrParams)
 

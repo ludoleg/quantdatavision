@@ -20,11 +20,15 @@ def openXRD(blob, filename):
         angle, diff = np.loadtxt(XRDdata, unpack=True)
        
     elif filename.endswith(".txt"):
-        jump=7
-        XRDdata = blob.readlines()[jump:]
+        txtfile = blob.readlines()
         # XRDdata = blob.open().readlines()[jump:]
-        angle, diff = np.loadtxt(XRDdata, unpack=True)
-        
+        jump = 0
+        i=0
+        while txtfile[i].startswith('#'):
+            jump+=1
+            i+=1
+        angle, diff = np.loadtxt(txtfile[jump:], unpack=True, delimiter='\t')
+
     elif filename.endswith(".dif") or filename.endswith(".mdi"):
         dif = blob.readlines()
         paramline = dif[1]
@@ -50,8 +54,19 @@ def openXRD(blob, filename):
         for i in range(0,len(lastline)):
              diffindex = ((len(dif)-3)*8)+i
              diff[diffindex]=float(lastline[i])
+             
+    elif filename.endswith(".csv"):
+         csvfile = blob.readlines()
+         # XRDdata = blob.open().readlines()[jump:]
+         jump = 0
+         i=0
+         while csvfile[i].startswith('#'):
+             jump+=1
+             i+=1
+         angle, diff = np.loadtxt(csvfile[jump:], unpack=True, delimiter=',')
+
     else:     
         logging.debug("file format error: plv, txt, dif, mdi required.")
-        
+   
     return (angle, diff)
 

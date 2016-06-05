@@ -7,14 +7,12 @@ Created on Wed Aug 20 16:03:16 2014
 import logging
 import numpy as np
 
-def openXRD(file, filename):
+def openXRD(blob, filename):
     """
    Opens an XRD file and returns two 1D array for 2theta and Intensity
    possible formats: TXT, PLV, DIF, MDI   ....   more to come
     """
     logging.debug("Starting openXRD")
-    blob = open(file, 'r')
-    
     if filename.endswith(".plv"): 
         jump=50
         XRDdata = blob.readlines()[jump:]
