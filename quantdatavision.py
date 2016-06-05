@@ -522,6 +522,7 @@ class ModesEditHandler(webapp2.RequestHandler):
         #get all input values
         mode_key_id = self.request.get('key_id')
         logging.debug(mode_key_id)
+        input_name = self.request.get('name').strip()
         input_qtarget = self.request.get('target').strip()
         input_qlambda = self.request.get('lambda').strip()
         logging.debug(input_qlambda)
@@ -535,7 +536,7 @@ class ModesEditHandler(webapp2.RequestHandler):
         logging.debug(input_description)
 
         mode = QuantMode()
-        mode.save_mode(0, input_description, input_qtarget, float(input_qlambda), float(input_fwhma), float(input_fwhmb), input_inventory, int(mode_key_id))
+        mode.save_mode(input_name, input_description, input_qtarget, float(input_qlambda), float(input_fwhma), float(input_fwhmb), input_inventory, int(mode_key_id))
         self.redirect('/modes')
 
 
