@@ -16,7 +16,7 @@ import time
 datafilepath='XRD_data'
 # datafilename = "CalciteP-film.plv"
 datafilename = "Mix3D-film.txt"
-DBfilepath=''
+DBfilepath='databases'
 DBname="difdata-rockforming.txt"
 phaselistname = 'test_list.csv'
 
@@ -27,7 +27,7 @@ InstrParams = {"Lambda": 0, "Target": '', "FWHMa": -0.001348, "FWHMb": 0.352021}
 t0=time.time()
 difdata = open((os.path.join(DBfilepath, DBname)), 'r').readlines()
 selectedphases = []
-phaselist = open(os.path.join(DBfilepath, phaselistname), 'r').readlines()
+phaselist = open(os.path.join('', phaselistname), 'r').readlines()
 for i in range (1, len(phaselist)):
     name, code = phaselist[i].split('\t')
     code = int(code)
