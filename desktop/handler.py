@@ -14,7 +14,7 @@ import os
 import time
 
 datafilepath='XRD_data'
-datafilename = "CalciteP-film.plv"
+datafilename = "dolomite-ST-film.txt"
 # datafilename = "Mix2D-film.txt"
 DBfilepath='databases'
 DBname="difdata-rockforming.txt"
