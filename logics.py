@@ -61,6 +61,7 @@ class QuantMode(object):
 		qmode.fwhmb = b
                 qmode.inventory = inventory
                 qmode.description = qdesc
+                qmode.title = qname
                 
                 #		qmode.user_name = users.get_current_user().email()
 		key = qmode.put()
