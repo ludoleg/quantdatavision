@@ -127,7 +127,7 @@ def Qanalyze(userData, difdata, selection, instrParams):
         optimize = True
     else:
         initialize = False
-        optimize = False        
+        optimize = False     
     
     starttime = time.time()
     
