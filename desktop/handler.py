@@ -14,13 +14,13 @@ import os
 import time
 
 datafilepath='XRD_data'
-datafilename = "dolomite-ST-film.txt"
+datafilename = "Forsterite__R040018-1__Powder__Xray_Data_XY_Processed__3027.txt"
 # datafilename = "Mix2D-film.txt"
 DBfilepath='databases'
 DBname="difdata-rockforming.txt"
-phaselistname = 'test_list.csv'
+phaselistname = 'Laure-mineral_list.csv'
 
-InstrParams = {"Lambda": 0, "Target": '', "FWHMa": -0.001348, "FWHMb": 0.352021}
+InstrParams = {"Lambda": 0, "Target": 'Cu', "FWHMa": 0.0022, "FWHMb": 0.2471}
 
 # datafilepath, datafilename = os.path.split(askopenfilename(filetypes=[("TXT files","*.txt")], title="Open XRD .txt file"))
 
