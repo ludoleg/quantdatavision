@@ -12,22 +12,15 @@ def openXRD(blob, filename):
    Opens an XRD file and returns two 1D array for 2theta and Intensity
    possible formats: TXT, PLV, DIF, MDI   ....   more to come
     """
+    angle =[0,1]
+    diff = [0,0]
+    
     logging.debug("Starting openXRD")
     if filename.endswith(".plv"): 
         jump=50
         XRDdata = blob.readlines()[jump:]
         # XRDdata = blob.open().readlines()[jump:]
         angle, diff = np.loadtxt(XRDdata, unpack=True)
-       
-    elif filename.endswith(".txt"):
-        txtfile = blob.readlines()
-        # XRDdata = blob.open().readlines()[jump:]
-        jump = 0
-        i=0
-        while txtfile[i].startswith('#'):
-            jump+=1
-            i+=1
-        angle, diff = np.loadtxt(txtfile[jump:], unpack=True, delimiter='\t')
 
     elif filename.endswith(".dif") or filename.endswith(".mdi"):
         dif = blob.readlines()
@@ -55,18 +48,23 @@ def openXRD(blob, filename):
              diffindex = ((len(dif)-3)*8)+i
              diff[diffindex]=float(lastline[i])
              
-    elif filename.endswith(".csv"):
-         csvfile = blob.readlines()
-         # XRDdata = blob.open().readlines()[jump:]
+    elif filename.endswith(".csv") or filename.endswith(".txt"):
+         datafile = blob.readlines()
          jump = 0
          i=0
-         while csvfile[i].startswith('#'):
+         while datafile[i].startswith('#'):
              jump+=1
              i+=1
-         angle, diff = np.loadtxt(csvfile[jump:], unpack=True, delimiter=',')
+         if '\t' in datafile[i]:
+             separator = '\t'
+         elif ',' in datafile[i]:
+             separator = ','
+         else:
+             separator = ' '
+         angle, diff = np.loadtxt(datafile[jump:], unpack=True, delimiter=separator)
 
     else:     
-        logging.debug("file format error: plv, txt, dif, mdi required.")
-   
+        logging.debug("file format error: plv, txt, csv, dif, mdi required.")
+    
     return (angle, diff)
 

@@ -122,11 +122,15 @@ def Qanalyze(userData, difdata, selection, instrParams):
     trashme = RIR
     code, RIR, enable, Thresh, trashme, PatDB = CleanMineralListPatDB (code, RIR, enable, Thresh, trashme, PatDB)
     
-    
-    initialize = True
-    optimize = True
+    if len(selection) > 0:
+        initialize = True
+        optimize = True
+    else:
+        initialize = False
+        optimize = False        
     
     starttime = time.time()
+    
     if initialize:
         logging.info("Start Initialization")
         Iinit = getIinitPatDB(angle,diff,BGpoly,PatDB, code,enable, INIsmoothing, OStarget)
@@ -140,58 +144,55 @@ def Qanalyze(userData, difdata, selection, instrParams):
         
         logging.info("Done computing Initialization")
        
-        #####     remove minerals disabled by initialization       ################     
-        code, RIR, enable, Thresh, Iinit, PatDB = CleanMineralListPatDB (code, RIR, enable, Thresh, Iinit, PatDB)
-        
+        #####     remove minerals disabled by initialization       ################
+        if sum(enable) > 0:        
+            code, RIR, enable, Thresh, Iinit, PatDB = CleanMineralListPatDB (code, RIR, enable, Thresh, Iinit, PatDB)
+            Sum_init = sumPat(Iinit, PatDB)
+            #Sum_init *= max(diff-BGpoly)/max(Sum_init)
+            Sum_init += BGpoly
+            Qinit = Iinit/sum(Iinit)*100
+            logging.info( "Iinit computing time = %.3fs" %(time.time()-starttime))
+        for i in range(0,len(code)):
+            logging.info("Qinit_%s : %.2f " %(nameref[code[i]], Qinit[i]))
     else:
         Iinit = np.array(([1.] * len(enable)))* np.array(enable)
 
-
-    Sum_init = sumPat(Iinit, PatDB)
-    #Sum_init *= max(diff-BGpoly)/max(Sum_init)
-    Sum_init += BGpoly
-    Qinit = Iinit/sum(Iinit)*100
-    logging.info( "Iinit computing time = %.3fs" %(time.time()-starttime))
-    
-    for i in range(0,len(code)):
-        logging.info("Qinit_%s : %.2f " %(nameref[code[i]], Qinit[i]))
-    
     starttime = time.time()
+    
+    if sum(enable) == 0:
+        optimize = False
+
     if optimize:
         
         logging.info("Start computing optimization")
-        
         code, RIR, enable, Thresh, I, PatDB = QrefinelstsqPatDB(angle, diff, BGpoly, code, RIR, enable, Thresh, Iinit, PatDB)
-        
-        logging.info("Done computing optimization- starting drawing")
-    else:
-        I = Iinit
-    logging.info("Phases enabled = %.0f", sum(enable))
-    logging.debug("Done phaseanalyze")
-    #####  reorganize results by decreasing % order #########
-    code, RIR, enable, Thresh, I, PatDB = CleanMineralListPatDB(code, RIR, enable, Thresh, I, PatDB)
-    code, RIR, enable, Thresh, I, PatDB = sortQlistPatDB(nameref, code, RIR, enable, Thresh, I, PatDB)
-    ####    #redo DB with shorter list    #####
-
-    Sum= sumPat(I, PatDB)
-    #Sum *= max(diff-BGpoly)/max(Sum)
-    Sum += BGpoly
+        logging.info("Done computing optimization")
     
+        #####  reorganize results by decreasing % order #########
+        code, RIR, enable, Thresh, I, PatDB = CleanMineralListPatDB(code, RIR, enable, Thresh, I, PatDB)
+        code, RIR, enable, Thresh, I, PatDB = sortQlistPatDB(nameref, code, RIR, enable, Thresh, I, PatDB)
+    
+    ####    #redo DB with shorter list    #####
+    results = []
+    
+    if sum(enable) > 0:
+        Sum= sumPat(I, PatDB)
+        Sum += BGpoly
+        Q = I/sum(I)*100
+        for i in range(0, len(code)):
+            results.append([nameref[code[i]], code[i], '%.1f' %Q[i]])
+    else: #this is to prevdnt crash if no phase is found at INIT
+        Sum = BGpoly
+        results=(('NO_RESULT', '0000', '000.0'),)
+        
     for i in range (0, len(code)):
         logging.info("%s = %.2f" %(code[i], I[i]))
-    
-    Q = I/sum(I)*100
+        
     logging.info("I Lstsq computing time = %.3fs" %(time.time()-starttime))
     logging.debug(code)
-    
-    results = []    
-    for i in range(0, len(code)):
-        results.append([nameref[code[i]], code[i], '%.1f' %Q[i]])
-
     return results, BGpoly, Sum
 
 '''
-
 Bellow is the function to calculate the gaussian patterns using an erf function instead of a gaussian, to avoid sampling errors. 
 It works but it's incredibly slow.   (65.s vs 1.5s).   Saved for later use:
 if we detect 2theta sampling conditions not meeting Nyquist rule.
