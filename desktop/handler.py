@@ -14,11 +14,13 @@ import os
 import time
 
 datafilepath='XRD_data'
-datafilename = "Forsterite__R040018-1__Powder__Xray_Data_XY_Processed__3027.txt"
-# datafilename = "Mix2D-film.txt"
+# datafilename = "Forsterite__R040018-1__Powder__Xray_Data_XY_Processed__3027.txt"
+datafilename = "Mix2D-film.txt"
 DBfilepath='databases'
 DBname="difdata-rockforming.txt"
-phaselistname = 'Laure-mineral_list.csv'
+#phaselistname = 'Laure-mineral_list.csv'
+phaselistname = 'difdata-rockforming_inventory.csv'
+
 
 InstrParams = {"Lambda": 0, "Target": 'Cu', "FWHMa": 0.0022, "FWHMb": 0.2471}
 
@@ -27,7 +29,7 @@ InstrParams = {"Lambda": 0, "Target": 'Cu', "FWHMa": 0.0022, "FWHMb": 0.2471}
 t0=time.time()
 difdata = open((os.path.join(DBfilepath, DBname)), 'r').readlines()
 selectedphases = []
-phaselist = open(os.path.join('', phaselistname), 'r').readlines()
+phaselist = open(os.path.join(DBfilepath, phaselistname), 'r').readlines()
 for i in range (1, len(phaselist)):
     name, code = phaselist[i].split('\t')
     code = int(code)
